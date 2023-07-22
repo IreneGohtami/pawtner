@@ -1,0 +1,28 @@
+.overlap-group {
+  background-color: #ffffff2b;
+  border-radius: 35px;
+  box-shadow: 10px 4px 12px #0000001c;
+  height: 287px;
+  width: 415px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ellipse {
+  height: 120px;
+  width: 120px;
+}
+
+.h1 {
+  font-weight: 600;
+  text-align: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.logo {
+  width: 276px;
+  top: 0;
+  left: 4rem;
+  position: absolute;
+}
