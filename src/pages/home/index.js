@@ -42,6 +42,7 @@ const HomePage = () => {
           }}
           layout="fullWidth"
           src={"./images/banner-1.png"}
+          alt="hero"
         />
       </GridItem>
       <GridItem area="hero">

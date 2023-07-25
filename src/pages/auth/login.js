@@ -1,15 +1,13 @@
-import React from "react";
-import { StaticImage } from "gatsby-plugin-image";
+import React, { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   ChakraProvider,
   Box,
   Button,
-  Center,
   Checkbox,
   Container,
   FormControl,
   FormLabel,
-  Hide,
   HStack,
   Icon,
   Input,
@@ -21,13 +19,18 @@ import {
   Text,
 } from "@chakra-ui/react";
 import Seo from "../../components/seo";
+import RightBanner from "../../components/rightBanner";
 import PawtnerLogo from "../../images/logo.inline.svg";
 import HideIcon from "../../images/icons/hide.inline.svg";
 import XIcon from "../../images/icons/x.inline.svg";
 import theme from "../../theme";
-import { logo } from "./login.module.css";
+import { logo } from "./auth.module.css";
 
 const LoginPage = () => {
+  const { loginWithRedirect } = useAuth0();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <ChakraProvider theme={theme}>
       <PawtnerLogo className={logo} />
@@ -41,13 +44,15 @@ const LoginPage = () => {
               Please fill your detail to access your account.
             </Text>
 
-            <FormControl>
+            <FormControl id="username">
               <FormLabel>Email</FormLabel>
               <InputGroup>
                 <Input
                   type="email"
                   placeholder="debra.holt@example.com"
                   h="44px"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
                 <InputRightElement
                   children={<Icon as={XIcon} w="24px" h="24px" />}
@@ -56,10 +61,15 @@ const LoginPage = () => {
               </InputGroup>
             </FormControl>
             <br />
-            <FormControl>
+            <FormControl id="password">
               <FormLabel>Password</FormLabel>
               <InputGroup>
-                <Input type="password" h="44px" />
+                <Input
+                  type="password"
+                  h="44px"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
                 <InputRightElement
                   children={<Icon as={HideIcon} w="24px" h="24px" />}
                   h="44px"
@@ -82,24 +92,14 @@ const LoginPage = () => {
               h="44px"
               borderRadius="8px"
               fontWeight={500}
+              onClick={loginWithRedirect}
             >
               Log in
             </Button>
           </Container>
         </Box>
 
-        <Hide below="md">
-          <Box
-            bg={theme.colors.primary}
-            borderRadius={40}
-            w="100%"
-            minH="600px"
-          >
-            <Center pt={20}>
-              <StaticImage src="./images/puppy.png" w={[400, 500, 600]} />
-            </Center>
-          </Box>
-        </Hide>
+        <RightBanner />
       </SimpleGrid>
     </ChakraProvider>
   );
