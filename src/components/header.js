@@ -19,13 +19,14 @@ import FavoriteIcon from "../images/icons/favorite.inline.svg";
 import MenuIcon from "../images/icons/menu.inline.svg";
 
 const Header = () => {
-  const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
   const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
   const roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
   console.log(user, roles, "user");
   if (!roles.length) {
     console.log("no roles");
   }
+
+  const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
 
   return (
     <Flex>

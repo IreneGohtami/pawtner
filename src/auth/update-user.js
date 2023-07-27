@@ -8,9 +8,9 @@ export const updateUserRole = async (userId, role) => {
 
   const options = {
     method: "POST",
-    url: `https://${process.env.AUTH0_DOMAIN}/api/v2/users/${userId}/roles`,
+    url: `https://${process.env.GATSBY_AUTH0_DOMAIN}/api/v2/users/${userId}/roles`,
     headers: {
-      authorization: `Bearer ${process.env.AUTH0_MANAGEMENT_API_TOKEN}`,
+      authorization: `Bearer ${process.env.GATSBY_AUTH0_MANAGEMENT_API_TOKEN}`,
       "cache-control": "no-cache",
       "content-type": "application/json",
     },
