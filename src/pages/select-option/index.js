@@ -32,7 +32,7 @@ const SelectOptionPage = () => {
     // Redirect user back to homepage
     navigate("/");
     //await updateUserRole("auth0|64c1ffd9adf0a94c33d0a2f1", role); //debug
-    //setIsLoading(false);
+    setIsLoading(false);
   };
 
   const renderSpinner = () => {
