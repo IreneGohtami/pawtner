@@ -6,6 +6,10 @@
   width: 415px;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+.overlap-group:hover {
+  box-shadow: 10px 4px 12px white;
 }
 
 .ellipse {

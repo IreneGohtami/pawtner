@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StaticImage } from "gatsby-plugin-image";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   useTheme,
   Box,
   Center,
-  Container,
   Grid,
   GridItem,
   HStack,
@@ -12,10 +12,7 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
-  InputLeftElement,
   InputRightAddon,
-  InputRightElement,
-  Spacer,
   Square,
   Text,
 } from "@chakra-ui/react";
@@ -23,13 +20,26 @@ import Seo from "../../components/seo";
 import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
 import Header from "../../components/header";
+import SelectOptionPage from "../select-option";
 
-import { searchBox, icon } from "./home.module.css";
+//import { searchBox, icon } from "./home.module.css";
 
 const HomePage = () => {
   //const theme = useTheme();
+  const { isAuthenticated, user } = useAuth0();
+  const [displayHomepage, setDisplayHomepage] = useState(true);
 
-  return (
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
+      console.log(user, roles, "user");
+      if (!roles.length) {
+        setDisplayHomepage(false);
+      }
+    }
+  }, [isAuthenticated, user]);
+
+  return displayHomepage ? (
     <Grid templateAreas={`"header" "hero" "main"`}>
       <GridItem area="header" px="40px">
         <Header />
@@ -53,7 +63,11 @@ const HomePage = () => {
                 bg="white"
                 borderRadius="23px 0 0 23px"
                 children={
-                  <Square size="90px" bg="gray.200" borderRadius="9px">
+                  <Square
+                    size={[30, 38, 50, 90]}
+                    bg="gray.200"
+                    borderRadius="9px"
+                  >
                     <Icon
                       as={FilterIcon}
                       w={[18, 22, 27, 45]}
@@ -98,6 +112,8 @@ const HomePage = () => {
         </Center>
       </GridItem>
     </Grid>
+  ) : (
+    <SelectOptionPage />
   );
 };
 
