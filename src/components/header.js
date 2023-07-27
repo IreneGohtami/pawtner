@@ -1,4 +1,5 @@
 import React from "react";
+import { navigate } from "gatsby";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   Box,
@@ -31,7 +32,11 @@ const Header = () => {
   return (
     <Flex>
       <Center h={headerHeights}>
-        <PawtnerLogo width="183px" />
+        <PawtnerLogo
+          width="183px"
+          cursor="pointer"
+          onClick={() => navigate("/")}
+        />
       </Center>
 
       <Spacer />

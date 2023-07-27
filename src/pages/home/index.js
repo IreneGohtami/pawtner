@@ -113,7 +113,7 @@ const HomePage = () => {
       </GridItem>
     </Grid>
   ) : (
-    <SelectOptionPage />
+    <SelectOptionPage setDisplayHomepage={setDisplayHomepage} />
   );
 };
 

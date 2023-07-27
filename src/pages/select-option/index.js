@@ -18,9 +18,10 @@ import PawtnerLogo from "../../images/logo.inline.svg";
 import theme from "../../theme";
 import { ellipse, h1, logo, overlapGroup } from "./select-option.module.css";
 
-const SelectOptionPage = () => {
+const SelectOptionPage = (props) => {
   const { isAuthenticated, user } = useAuth0();
   const [isLoading, setIsLoading] = useState(false);
+  const { setDisplayHomepage } = props;
 
   const handleRoleSelection = async (role) => {
     setIsLoading(true);
@@ -29,10 +30,13 @@ const SelectOptionPage = () => {
       await updateUserRole(user.sub, role);
     }
 
+    setIsLoading(false);
+    if (setDisplayHomepage) {
+      setDisplayHomepage(true);
+    }
+
     // Redirect user back to homepage
     navigate("/");
-    //await updateUserRole("auth0|64c1ffd9adf0a94c33d0a2f1", role); //debug
-    setIsLoading(false);
   };
 
   const renderSpinner = () => {
