@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { StaticImage } from "gatsby-plugin-image";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -11,7 +12,6 @@ import {
   Wrap,
   useTheme,
 } from "@chakra-ui/react";
-import { updateUserRole } from "../../auth/update-user";
 import { ellipse, h1, overlapGroup } from "./select-option.module.css";
 
 const SelectOptionPage = () => {
@@ -23,7 +23,10 @@ const SelectOptionPage = () => {
     setIsLoading(true);
     // Update user's role using Auth0 Management API
     if (isAuthenticated && user) {
-      await updateUserRole(user.sub, role);
+      await axios.post("/api/update-user-role", {
+        userId: user.sub,
+        role,
+      });
     }
 
     setIsLoading(false);
