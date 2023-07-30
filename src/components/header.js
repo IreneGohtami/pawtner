@@ -14,18 +14,17 @@ import {
   Text,
   Wrap,
 } from "@chakra-ui/react";
+import { getCookie } from "../cookie-manager";
 import PawtnerLogo from "../images/logo.inline.svg";
 import ArrowUpIcon from "../images/icons/arrow-up.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
 import MenuIcon from "../images/icons/menu.inline.svg";
 
 const Header = () => {
-  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
-  const roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
-  console.log(user, roles, "user");
-  if (!roles.length) {
-    console.log("no roles");
-  }
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } =
+    useAuth0();
+  const role = user ? getCookie(`role|${user.email}`) : "";
+  console.log(user, role, isLoading, "user role");
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
 
@@ -46,7 +45,7 @@ const Header = () => {
           <Center h={headerHeights} px="30px">
             <Select
               icon={<ArrowUpIcon />}
-              placeholder="ALL ABOUT PUPPY &emsp;&emsp;&emsp;"
+              placeholder="ALL ABOUT PUPPY &emsp;"
               border={0}
             />
             <Box display="flex" ml="3rem">
@@ -56,9 +55,6 @@ const Header = () => {
         </Wrap>
         <Wrap>
           <Center h={headerHeights} borderLeft="1px" borderColor="gray.200">
-            {/*<Text mx="30px">
-              <Link href="#">Sign Up</Link>
-            </Text>*/}
             {!isAuthenticated ? (
               <Text fontWeight={600} mx="30px">
                 <Link href="#" onClick={loginWithRedirect}>
@@ -66,11 +62,20 @@ const Header = () => {
                 </Link>
               </Text>
             ) : (
-              <Text fontWeight={600} mx="30px">
-                <Link href="#" onClick={logout}>
-                  Log Out
-                </Link>
-              </Text>
+              <>
+                {!isLoading && (
+                  <Text mx="30px" fontWeight={600}>
+                    <Link href={role == "breeder" ? "/breeder-profile" : "#"}>
+                      Account
+                    </Link>
+                  </Text>
+                )}
+                <Text mr="10px">
+                  <Link href="#" onClick={logout}>
+                    Log Out
+                  </Link>
+                </Text>
+              </>
             )}
           </Center>
         </Wrap>
@@ -79,9 +84,6 @@ const Header = () => {
         <Center h="70px" pt={1}>
           <FavoriteIcon />
           <Select icon={<Icon as={MenuIcon} />} size="sm" width={9} border={0}>
-            {/*<option>
-              <Link href="#">Sign Up</Link>
-            </option>*/}
             {!isAuthenticated ? (
               <option>
                 <Link href="#" onClick={loginWithRedirect}>

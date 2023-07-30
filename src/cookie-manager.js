@@ -1,11 +1,13 @@
 import Cookies from "js-cookie";
 
-// Function to check if the cookie exists
-export const isCookieSet = () => {
-  return Cookies.get("visited") === "true";
+export const getCookie = (key) => {
+  return Cookies.get(key);
 };
 
-// Function to set the cookie
-export const setCookie = () => {
-  Cookies.set("visited", "true", { expires: 365 }); // Set cookie to expire after 365 days
+export const setCookie = (key, value, expires = 1) => {
+  Cookies.set(key, value, { expires }); // Expiration is integer representing days
+};
+
+export const deleteCookie = (key) => {
+  Cookies.remove(key);
 };
