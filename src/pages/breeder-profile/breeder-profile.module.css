@@ -1,0 +1,15 @@
+.follower-box {
+  width: 129px;
+  height: 85px;
+  border-radius: 19px;
+  border: 1px solid #f0f0f0;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-icon {
+  width: 49px;
+  height: 49px;
+  border: 1px solid rgba(64, 24, 157, 0.16);
+  margin-right: 6px;
+}

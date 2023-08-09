@@ -2,49 +2,32 @@ import axios from "axios";
 import React, { useState } from "react";
 import { StaticImage } from "gatsby-plugin-image";
 import { useAuth0 } from "@auth0/auth0-react";
-import {
-  Box,
-  Center,
-  Flex,
-  Container,
-  Spinner,
-  Text,
-  Wrap,
-  useTheme,
-} from "@chakra-ui/react";
+import { Box, Flex, Container, Text, Wrap, useTheme } from "@chakra-ui/react";
+import { setCookie } from "../../cookie-manager";
+import CustomSpinner from "../spinner";
 import { ellipse, h1, overlapGroup } from "./select-option.module.css";
 
-const SelectOptionPage = () => {
+const SelectOptionPage = (props) => {
   const theme = useTheme();
   const { isAuthenticated, user } = useAuth0();
   const [isLoading, setIsLoading] = useState(false);
+  const { setRole, onClose } = props;
 
   const handleRoleSelection = async (role) => {
     setIsLoading(true);
     // Update user's role using Auth0 Management API
     if (isAuthenticated && user) {
-      await axios.post("/api/update-user-role", {
+      await axios.post("/api/auth0", {
+        action: "update_user_role",
         userId: user.sub,
         role,
       });
+      setRole(role);
+      setCookie(`role|${user.email}`, role);
     }
 
     setIsLoading(false);
-    window.location.reload();
-  };
-
-  const renderSpinner = () => {
-    return (
-      <Center minH="530px">
-        <Spinner
-          thickness="4px"
-          speed="0.65s"
-          emptyColor="gray.200"
-          color="blue.500"
-          size="xl"
-        />
-      </Center>
-    );
+    onClose();
   };
 
   return (
@@ -56,7 +39,7 @@ const SelectOptionPage = () => {
         minH="530px"
       >
         {isLoading ? (
-          renderSpinner()
+          <CustomSpinner height="530px" />
         ) : (
           <>
             <Text

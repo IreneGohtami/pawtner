@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { StaticImage } from "gatsby-plugin-image";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
@@ -24,22 +24,28 @@ import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
 import Header from "../../components/header";
 import SelectOptionPage from "../../components/select-option";
-import { setCookie } from "../../cookie-manager";
+import { getCookie } from "../../cookie-manager";
 
 //import { searchBox, icon } from "./home.module.css";
 
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth0();
-  const { isOpen, onOpen } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [role, setRole] = useState("");
 
   useEffect(() => {
     if (isAuthenticated && user) {
       const roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
       console.log(user, roles, "user");
       if (!roles.length) {
-        onOpen();
+        // Try to check cookie
+        const cookieRole = getCookie(`role|${user.email}`) || "";
+        setRole(cookieRole);
+        if (!cookieRole) {
+          onOpen();
+        }
       } else {
-        setCookie(`role|${user.email}`, roles[0]);
+        setRole(roles[0]);
       }
     }
   }, [isAuthenticated, user]);
@@ -49,12 +55,12 @@ const HomePage = () => {
       <Modal isOpen={isOpen}>
         <ModalOverlay />
         <ModalContent>
-          <SelectOptionPage />
+          <SelectOptionPage setRole={setRole} onClose={onClose} />
         </ModalContent>
       </Modal>
       <Grid templateAreas={`"header" "hero" "main"`}>
         <GridItem area="header" px="40px">
-          <Header />
+          <Header isAuthenticated={isAuthenticated} user={user} role={role} />
         </GridItem>
         <GridItem area="hero">
           <StaticImage

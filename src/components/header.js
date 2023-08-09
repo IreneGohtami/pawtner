@@ -14,17 +14,14 @@ import {
   Text,
   Wrap,
 } from "@chakra-ui/react";
-import { getCookie } from "../cookie-manager";
 import PawtnerLogo from "../images/logo.inline.svg";
 import ArrowUpIcon from "../images/icons/arrow-up.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
 import MenuIcon from "../images/icons/menu.inline.svg";
 
-const Header = () => {
-  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } =
-    useAuth0();
-  const role = user ? getCookie(`role|${user.email}`) : "";
-  console.log(user, role, isLoading, "user role");
+const Header = (props) => {
+  const { loginWithRedirect, logout } = useAuth0();
+  const { isAuthenticated, role } = props;
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
 
@@ -63,13 +60,11 @@ const Header = () => {
               </Text>
             ) : (
               <>
-                {!isLoading && (
-                  <Text mx="30px" fontWeight={600}>
-                    <Link href={role == "breeder" ? "/breeder-profile" : "#"}>
-                      Account
-                    </Link>
-                  </Text>
-                )}
+                <Text mx="30px" fontWeight={600}>
+                  <Link href={role == "breeder" ? "/breeder-profile" : "#"}>
+                    Account
+                  </Link>
+                </Text>
                 <Text mr="10px">
                   <Link href="#" onClick={logout}>
                     Log Out
