@@ -1,5 +1,10 @@
 import axios from "axios";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  getDownloadURL,
+  ref,
+  updateMetadata,
+  uploadBytes,
+} from "firebase/storage";
 import { Field, Form, Formik } from "formik";
 import { navigate } from "gatsby";
 import countries from "i18n-iso-countries";
@@ -113,6 +118,7 @@ const BreederProfile = () => {
           );
           setOriginalMetadata(userMetadata);
           setConnection(data.identities[0].connection);
+          setError(null);
         } catch (error) {
           setError(error?.response?.data || error.message);
         }
@@ -182,10 +188,11 @@ const BreederProfile = () => {
         userId: user.sub,
         connection,
         payload: {
-          user_metadata: userMetadata,
+          user_metadata: values,
         },
       });
       setOriginalMetadata(userMetadata);
+      setError(null);
     } catch (e) {
       setError(e?.response?.data || e.message);
     }
@@ -206,6 +213,7 @@ const BreederProfile = () => {
       });
       setUserMetadata({ ...userMetadata, profile_picture: imageUrl });
       setOriginalMetadata(userMetadata);
+      setError(null);
     } catch (e) {
       setError(e?.response?.data || e.message);
     }
@@ -257,12 +265,18 @@ const BreederProfile = () => {
       const storageRef = ref(storage, `users/${userId}/profile_picture.png`);
 
       try {
+        await updateMetadata(storageRef, {
+          customMetadata: {
+            userId: userId,
+          },
+        });
         const snapshot = await uploadBytes(storageRef, file);
         const imageUrl = await getDownloadURL(snapshot.ref);
 
         await updateUserProfilePicture(imageUrl);
+        setError(null);
       } catch (error) {
-        setError(error.message);
+        setError("Error uploading image. Please try again.");
         console.error("Error uploading image:", error);
         setIsUploadingPicture(false);
       }
