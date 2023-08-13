@@ -23,7 +23,7 @@ const SelectOptionPage = (props) => {
         role,
       });
       setRole(role);
-      setCookie(`role|${user.email}`, role);
+      setCookie(`role|${user.email}`, role, 1);
     }
 
     setIsLoading(false);

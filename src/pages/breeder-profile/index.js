@@ -1,10 +1,15 @@
 import axios from "axios";
-import { isEmpty } from "lodash";
-import React, { useEffect, useRef, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { Field, Form, Formik } from "formik";
 import { navigate } from "gatsby";
 import countries from "i18n-iso-countries";
+import { isEmpty } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import {
+  Alert,
+  AlertIcon,
   ChakraProvider,
   Box,
   Button,
@@ -27,7 +32,7 @@ import {
   Spacer,
   VStack,
 } from "@chakra-ui/react";
-import { Field, Form, Formik } from "formik";
+
 import Header from "../../components/header";
 import Seo from "../../components/seo";
 import CustomSpinner from "../../components/spinner";
@@ -35,16 +40,13 @@ import IcMenu from "../../images/icons/ic-menu.inline.svg";
 import CameraIcon from "../../images/icons/camera.inline.svg";
 import EmailIcon from "../../images/icons/email.inline.svg";
 import TelephoneIcon from "../../images/icons/telephone.inline.svg";
-//import DefaultProfilePicture from "../../images/user.png";
 import theme from "../../theme";
 import { getCookie } from "../../cookie-manager";
+import { storage } from "../../firebase";
 import { followerBox, profileIcon } from "./breeder-profile.module.css";
 
 const BreederProfile = () => {
   const { isAuthenticated, isLoading, user } = useAuth0();
-
-  const [role, setRole] = useState("");
-  const [password, setPassword] = useState("");
 
   const defaultMetadata = {
     first_name: "",
@@ -61,11 +63,17 @@ const BreederProfile = () => {
     following: 0,
     followers: 0,
   };
+
+  const [role, setRole] = useState("");
+  const [password, setPassword] = useState("");
+  const [originalMetadata, setOriginalMetadata] = useState(defaultMetadata); // from API
   const [userMetadata, setUserMetadata] = useState(defaultMetadata);
   const [connection, setConnection] = useState("");
-
+  const [isFormLoading, setIsFormLoading] = useState(true);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [onPictureHover, setOnPictureHover] = useState(false);
+  const [error, setError] = useState(null);
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -88,21 +96,27 @@ const BreederProfile = () => {
       const lastName = names.length > 1 ? names[names.length - 1] : "";
 
       async function fetchUserMetadata() {
-        const { data } = await axios.get(
-          `/api/auth0?action=get_user_metadata&userId=${user.sub}`
-        );
-        setUserMetadata(
-          !isEmpty(data.user_metadata)
-            ? { ...data.user_metadata, password: "", retype_password: "" }
-            : {
-                ...defaultMetadata,
-                first_name: firstName,
-                last_name: lastName,
-                email: user.email,
-                profile_picture: user.picture || "",
-              }
-        );
-        setConnection(data.identities[0].connection);
+        try {
+          const { data } = await axios.get(
+            `/api/auth0?action=get_user_metadata&userId=${user.sub}`
+          );
+          setUserMetadata(
+            !isEmpty(data.user_metadata)
+              ? { ...data.user_metadata, password: "", retype_password: "" }
+              : {
+                  ...defaultMetadata,
+                  first_name: firstName,
+                  last_name: lastName,
+                  email: user.email,
+                  profile_picture: user.picture || "",
+                }
+          );
+          setOriginalMetadata(userMetadata);
+          setConnection(data.identities[0].connection);
+        } catch (error) {
+          setError(error?.response?.data || error.message);
+        }
+        setIsFormLoading(false);
       }
       fetchUserMetadata();
     }
@@ -145,6 +159,9 @@ const BreederProfile = () => {
               focusBorderColor={theme.colors.primary}
               variant="flushed"
               placeholder={placeholder || label}
+              onChange={(e) => {
+                setUserMetadata({ ...userMetadata, [name]: e.target.value });
+              }}
               {...additionalProps}
             />
             <FormErrorMessage>{form.errors[name]}</FormErrorMessage>
@@ -156,16 +173,43 @@ const BreederProfile = () => {
 
   const updateUserMetadata = async (values, actions) => {
     try {
+      if (JSON.stringify(userMetadata) === JSON.stringify(originalMetadata)) {
+        // No need to update if there are no changes
+        return;
+      }
       await axios.post("/api/auth0", {
         action: "update_user_metadata",
         userId: user.sub,
         connection,
         payload: {
-          user_metadata: values,
+          user_metadata: userMetadata,
         },
       });
-    } catch (e) {}
+      setOriginalMetadata(userMetadata);
+    } catch (e) {
+      setError(e?.response?.data || e.message);
+    }
     actions.setSubmitting(false);
+  };
+
+  const updateUserProfilePicture = async (imageUrl) => {
+    try {
+      await axios.post("/api/auth0", {
+        action: "update_user_metadata",
+        userId: user.sub,
+        connection,
+        payload: {
+          user_metadata: {
+            profile_picture: imageUrl,
+          },
+        },
+      });
+      setUserMetadata({ ...userMetadata, profile_picture: imageUrl });
+      setOriginalMetadata(userMetadata);
+    } catch (e) {
+      setError(e?.response?.data || e.message);
+    }
+    setIsUploadingPicture(false);
   };
 
   const validatePassword = (value) => {
@@ -205,15 +249,35 @@ const BreederProfile = () => {
     fileInputRef.current.click();
   };
 
-  const uploadImage = (event) => {
+  const uploadImage = async (event) => {
     const file = event.target.files[0];
-    console.log(file, "files");
-    // You can use this file to upload to your server
+    if (file) {
+      setIsUploadingPicture(true);
+      const userId = user ? user.sub.split("|")[1] : "";
+      const storageRef = ref(storage, `users/${userId}/profile_picture.png`);
+
+      try {
+        const snapshot = await uploadBytes(storageRef, file);
+        const imageUrl = await getDownloadURL(snapshot.ref);
+
+        await updateUserProfilePicture(imageUrl);
+      } catch (error) {
+        setError(error.message);
+        console.error("Error uploading image:", error);
+        setIsUploadingPicture(false);
+      }
+    }
   };
 
   return (
-    isAuthenticated && (
+    !isFormLoading && (
       <ChakraProvider theme={theme}>
+        {error && (
+          <Alert status="error">
+            <AlertIcon />
+            {error}
+          </Alert>
+        )}
         <Box w="100%" px="1.5rem" bg="#F2F2F2" fontFamily="Poppins !important">
           <Header isAuthenticated={isAuthenticated} user={user} role={role} />
 
@@ -309,6 +373,12 @@ const BreederProfile = () => {
                             placeholder="***************"
                             validate={(value) => {
                               return validatePassword(value);
+                            }}
+                            onChange={(e) => {
+                              setUserMetadata({
+                                ...userMetadata,
+                                password: e.target.value,
+                              });
                             }}
                           />
                           <FormErrorMessage>{errors.password}</FormErrorMessage>
@@ -436,18 +506,23 @@ const BreederProfile = () => {
                   >
                     <VStack>
                       <Circle size="152px" bg={theme.colors.primary}>
-                        <Image
-                          src={initialValues.profile_picture}
-                          alt="profile picture"
-                          w="122px"
-                          borderRadius="122px"
-                          border="4px solid white"
-                          cursor="pointer"
-                          opacity={onPictureHover ? 0.4 : 1}
-                          onClick={handleUploadClick}
-                          onMouseEnter={() => setOnPictureHover(true)}
-                          onMouseLeave={() => setOnPictureHover(false)}
-                        />
+                        {isUploadingPicture ? (
+                          <CustomSpinner />
+                        ) : (
+                          <Image
+                            src={initialValues.profile_picture}
+                            alt="profile picture"
+                            maxW="122px"
+                            maxH="122px"
+                            borderRadius="122px"
+                            border="4px solid white"
+                            cursor="pointer"
+                            opacity={onPictureHover ? 0.4 : 1}
+                            onClick={handleUploadClick}
+                            onMouseEnter={() => setOnPictureHover(true)}
+                            onMouseLeave={() => setOnPictureHover(false)}
+                          />
+                        )}
                         {onPictureHover && (
                           <Icon
                             as={CameraIcon}

@@ -61,7 +61,7 @@ const Header = (props) => {
             ) : (
               <>
                 <Text mx="30px" fontWeight={600}>
-                  <Link href={role == "breeder" ? "/breeder-profile" : "#"}>
+                  <Link href={role === "breeder" ? "/breeder-profile" : "#"}>
                     Account
                   </Link>
                 </Text>
