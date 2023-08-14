@@ -30,7 +30,6 @@ import {
   Image,
   Input,
   Select,
-  SimpleGrid,
   Stack,
   Text,
   Textarea,
@@ -317,7 +316,11 @@ const BreederProfile = () => {
                   direction={{ base: "column", lg: "row" }}
                 >
                   <Box flex={4} bg="white" borderRadius={20} p="25px">
-                    <Flex px="15px" py="8px">
+                    <Flex
+                      px="15px"
+                      py="8px"
+                      direction={{ base: "column", lg: "row" }}
+                    >
                       <HStack>
                         <Text
                           fontSize={16}
@@ -331,140 +334,128 @@ const BreederProfile = () => {
                         </Text>
                       </HStack>
                       <Spacer />
-                      <Button
-                        background="#F4F4F4"
-                        colorScheme="gray"
-                        color="#9F9F9F"
-                        size="md"
-                        borderRadius={54}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        bg={theme.colors.primary}
-                        colorScheme="yellow"
-                        size="md"
-                        borderRadius={54}
-                        ml="16px"
-                        isLoading={isSubmitting}
-                        type="submit"
-                      >
-                        Save Changes
-                      </Button>
+                      <HStack>
+                        <Button
+                          background="#F4F4F4"
+                          colorScheme="gray"
+                          color="#9F9F9F"
+                          size="md"
+                          borderRadius={54}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          bg={theme.colors.primary}
+                          colorScheme="yellow"
+                          size="md"
+                          borderRadius={54}
+                          isLoading={isSubmitting}
+                          type="submit"
+                        >
+                          Save Changes
+                        </Button>
+                      </HStack>
                     </Flex>
 
                     {renderSectionTitle("GENERALS")}
-                    <SimpleGrid
-                      columns={3}
-                      spacing={10}
-                      fontWeight={500}
-                      mb={10}
+                    <Stack
+                      direction={{ md: "row" }}
+                      spacing={{ base: 3, md: 10 }}
+                      flexWrap={{ base: "wrap", md: "nowrap" }}
                     >
-                      <Stack direction="column">
-                        {renderInput(
-                          "first_name",
-                          "First name",
-                          "text",
-                          1,
-                          "",
-                          {
-                            required: true,
-                          }
-                        )}
+                      {renderInput("first_name", "First name", "text", 1, "", {
+                        required: true,
+                      })}
+                      {renderInput("last_name", "Last name", "text", 2, "", {
+                        required: true,
+                      })}
+                      {renderInput("email", "Email", "email", 3, "", {
+                        disabled: true,
+                      })}
+                    </Stack>
+                    <Stack
+                      direction={{ base: "column", md: "row" }}
+                      spacing={{ base: 3, md: 10 }}
+                    >
+                      <FormControl
+                        isInvalid={!!errors.password && touched.password}
+                        mb={5}
+                      >
+                        <FormLabel>Password</FormLabel>
+                        <Field
+                          as={Input}
+                          name="password"
+                          tabIndex={4}
+                          type="password"
+                          focusBorderColor={theme.colors.primary}
+                          variant="flushed"
+                          placeholder="***************"
+                          validate={(value) => {
+                            return validatePassword(value);
+                          }}
+                          onChange={(e) => {
+                            setUserMetadata({
+                              ...userMetadata,
+                              password: e.target.value,
+                            });
+                          }}
+                        />
+                        <FormErrorMessage>{errors.password}</FormErrorMessage>
+                      </FormControl>
 
-                        <FormControl
-                          isInvalid={!!errors.password && touched.password}
-                          mb={5}
-                        >
-                          <FormLabel>Password</FormLabel>
-                          <Field
-                            as={Input}
-                            name="password"
-                            tabIndex={4}
-                            type="password"
-                            focusBorderColor={theme.colors.primary}
-                            variant="flushed"
-                            placeholder="***************"
-                            validate={(value) => {
-                              return validatePassword(value);
-                            }}
-                            onChange={(e) => {
-                              setUserMetadata({
-                                ...userMetadata,
-                                password: e.target.value,
-                              });
-                            }}
-                          />
-                          <FormErrorMessage>{errors.password}</FormErrorMessage>
-                        </FormControl>
-                      </Stack>
-                      <Stack direction="column">
-                        {renderInput("last_name", "Last name", "text", 2, "", {
-                          required: true,
-                        })}
+                      <FormControl
+                        isInvalid={
+                          !!errors.retype_password && touched.retype_password
+                        }
+                        mb={5}
+                      >
+                        <FormLabel>Re-Type Password</FormLabel>
+                        <Field
+                          as={Input}
+                          name="retype_password"
+                          tabIndex={5}
+                          type="password"
+                          focusBorderColor={theme.colors.primary}
+                          variant="flushed"
+                          placeholder="***************"
+                          validate={(value) => {
+                            if (value !== password) {
+                              return "Password does not match";
+                            }
+                          }}
+                        />
+                        <FormErrorMessage>
+                          {errors.retype_password}
+                        </FormErrorMessage>
+                      </FormControl>
 
-                        <FormControl
-                          isInvalid={
-                            !!errors.retype_password && touched.retype_password
-                          }
-                          mb={5}
-                        >
-                          <FormLabel>Re-Type Password</FormLabel>
-                          <Field
-                            as={Input}
-                            name="retype_password"
-                            tabIndex={5}
-                            type="password"
-                            focusBorderColor={theme.colors.primary}
-                            variant="flushed"
-                            placeholder="***************"
-                            validate={(value) => {
-                              if (value !== password) {
-                                return "Password does not match";
-                              }
-                            }}
-                          />
-                          <FormErrorMessage>
-                            {errors.retype_password}
-                          </FormErrorMessage>
-                        </FormControl>
-                      </Stack>
-                      <Stack direction="column">
-                        {renderInput("email", "Email", "email", 3, "", {
-                          disabled: true,
-                        })}
-
-                        {renderInput(
-                          "phone",
-                          "Phone Number",
-                          "tel",
-                          6,
-                          "+5012345678"
-                        )}
-                      </Stack>
-                    </SimpleGrid>
+                      {renderInput(
+                        "phone",
+                        "Phone Number",
+                        "tel",
+                        6,
+                        "+5012345678"
+                      )}
+                    </Stack>
 
                     {renderSectionTitle("ADDRESS")}
-                    <SimpleGrid
-                      columns={3}
-                      spacing={10}
-                      fontWeight={500}
-                      mb={10}
+                    <Stack
+                      direction={{ md: "row" }}
+                      spacing={{ base: 3, md: 10 }}
+                      flexWrap={{ base: "wrap", md: "nowrap" }}
                     >
-                      <Stack direction="column">
-                        {renderInput(
-                          "address",
-                          "Address",
-                          "text",
-                          7,
-                          "Street name, house number"
-                        )}
-                      </Stack>
-                      <Stack direction="column">
-                        {renderInput("city", "City", "text", 8)}
-                      </Stack>
-                      <Stack direction="column">
-                        <Text>Country</Text>
+                      {renderInput(
+                        "address",
+                        "Address",
+                        "text",
+                        7,
+                        "Street name, house number"
+                      )}
+
+                      {renderInput("city", "City", "text", 8)}
+
+                      <FormControl>
+                        <FormLabel>Country</FormLabel>
                         <Select
                           name="country"
                           tabIndex={9}
@@ -485,8 +476,8 @@ const BreederProfile = () => {
                             </option>
                           ))}
                         </Select>
-                      </Stack>
-                    </SimpleGrid>
+                      </FormControl>
+                    </Stack>
 
                     {renderSectionTitle("ABOUT ME")}
                     <Textarea

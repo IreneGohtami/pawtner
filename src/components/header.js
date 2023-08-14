@@ -78,19 +78,28 @@ const Header = (props) => {
       <Show below="md">
         <Center h="70px" pt={1}>
           <FavoriteIcon />
-          <Select icon={<Icon as={MenuIcon} />} size="sm" width={9} border={0}>
+          <Select
+            icon={<Icon as={MenuIcon} />}
+            size="sm"
+            width={9}
+            border={0}
+            cursor="pointer"
+          >
             {!isAuthenticated ? (
-              <option>
-                <Link href="#" onClick={loginWithRedirect}>
-                  Log In
-                </Link>
-              </option>
+              <option onClick={loginWithRedirect}>Log In</option>
             ) : (
-              <option>
-                <Link href="#" onClick={logout}>
-                  Log Out
-                </Link>
-              </option>
+              <>
+                <option
+                  onClick={() => {
+                    role === "breeder"
+                      ? navigate("/breeder-profile")
+                      : navigate("/");
+                  }}
+                >
+                  Account
+                </option>
+                <option onClick={logout}>Log Out</option>
+              </>
             )}
             <option>ALL ABOUT PUPPY</option>
           </Select>
