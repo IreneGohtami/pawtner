@@ -1,5 +1,5 @@
 import React from "react";
-const { Center, Spinner } = require("@chakra-ui/react");
+import { Center, Spinner } from "@chakra-ui/react";
 
 const CustomSpinner = (props) => {
   return (

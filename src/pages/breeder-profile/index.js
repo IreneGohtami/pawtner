@@ -8,11 +8,17 @@ import {
 import { Field, Form, Formik } from "formik";
 import { navigate } from "gatsby";
 import countries from "i18n-iso-countries";
+import en from "i18n-iso-countries/langs/en.json";
 import { isEmpty } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Alert,
   AlertIcon,
   ChakraProvider,
@@ -35,19 +41,29 @@ import {
   Textarea,
   Spacer,
   VStack,
+  useDisclosure,
 } from "@chakra-ui/react";
 
+import { getCookie } from "../../cookie-manager";
 import Header from "../../components/header";
 import Seo from "../../components/seo";
 import CustomSpinner from "../../components/spinner";
-import IcMenu from "../../images/icons/ic-menu.inline.svg";
+import { storage } from "../../firebase";
+import theme from "../../theme";
+
 import CameraIcon from "../../images/icons/camera.inline.svg";
 import EmailIcon from "../../images/icons/email.inline.svg";
 import TelephoneIcon from "../../images/icons/telephone.inline.svg";
-import theme from "../../theme";
-import { getCookie } from "../../cookie-manager";
-import { storage } from "../../firebase";
-import { followerBox, profileIcon } from "./breeder-profile.module.css";
+
+import UploadPuppyPage from "./upload-puppy";
+
+import {
+  cancelButton,
+  followerBox,
+  imgCircle,
+  profileIcon,
+  textarea,
+} from "./breeder-profile.module.css";
 
 const BreederProfile = () => {
   const { isAuthenticated, isLoading, user } = useAuth0();
@@ -77,8 +93,10 @@ const BreederProfile = () => {
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [onPictureHover, setOnPictureHover] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadSuccessAlert, setUploadSuccessAlert] = useState(null);
 
   const fileInputRef = useRef(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -127,6 +145,14 @@ const BreederProfile = () => {
     }
   }, [isAuthenticated, user]);
 
+  useEffect(() => {
+    if (uploadSuccessAlert) {
+      setTimeout(() => {
+        setUploadSuccessAlert(null);
+      }, 3000);
+    }
+  }, [uploadSuccessAlert]);
+
   const renderSectionTitle = (title) => {
     return isLoading ? (
       <CustomSpinner height="100vh" />
@@ -145,7 +171,6 @@ const BreederProfile = () => {
     name,
     label,
     type,
-    tabIndex,
     placeholder = "",
     additionalProps = {}
   ) => {
@@ -159,7 +184,6 @@ const BreederProfile = () => {
             <FormLabel>{label}</FormLabel>
             <Input
               {...field}
-              tabIndex={tabIndex}
               type={type}
               focusBorderColor={theme.colors.primary}
               variant="flushed"
@@ -243,7 +267,7 @@ const BreederProfile = () => {
     return "";
   };
 
-  countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
+  countries.registerLocale(en);
   const countryObj = countries.getNames("en", { select: "official" });
   const countryArr = Object.entries(countryObj).map(([key, value]) => {
     return {
@@ -291,315 +315,351 @@ const BreederProfile = () => {
             {error}
           </Alert>
         )}
-        <Box w="100%" px="1.5rem" bg="#F2F2F2" fontFamily="Poppins !important">
+        {uploadSuccessAlert && (
+          <Alert status="success">
+            <AlertIcon />
+            {uploadSuccessAlert}
+          </Alert>
+        )}
+        <Box
+          w="100%"
+          px="1.5rem"
+          pb="5rem"
+          bg="#F2F2F2"
+          fontFamily="Poppins !important"
+        >
           <Header isAuthenticated={isAuthenticated} user={user} role={role} />
 
-          <HStack ml="18px">
-            <IcMenu w={29} />
-            <Text fontSize={28} fontWeight={600}>
-              &emsp;Breeder Profile
-            </Text>
-          </HStack>
-
-          <Formik
-            initialValues={userMetadata}
-            enableReinitialize
-            onSubmit={async (values, actions) => {
-              await updateUserMetadata(values, actions);
-            }}
-          >
-            {({ initialValues, isSubmitting, errors, touched }) => (
-              <Form>
-                <Flex
-                  gap="30px"
-                  mt="30px"
-                  direction={{ base: "column", lg: "row" }}
+          <Accordion defaultIndex={[0]} allowMultiple>
+            <AccordionItem>
+              <AccordionButton>
+                <AccordionIcon fontSize={30} />
+                <Text fontSize={28} fontWeight={600}>
+                  &emsp;Breeder Profile
+                </Text>
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                <Formik
+                  initialValues={userMetadata}
+                  enableReinitialize
+                  onSubmit={async (values, actions) => {
+                    await updateUserMetadata(values, actions);
+                  }}
                 >
-                  <Box flex={4} bg="white" borderRadius={20} p="25px">
-                    <Flex
-                      px="15px"
-                      py="8px"
-                      direction={{ base: "column", lg: "row" }}
-                    >
-                      <HStack>
-                        <Text
-                          fontSize={16}
-                          fontWeight={800}
-                          color={theme.colors.primary}
-                        >
-                          Profile /
-                        </Text>
-                        <Text fontSize={16} color="gray.500">
-                          Edit Profile
-                        </Text>
-                      </HStack>
-                      <Spacer />
-                      <HStack>
-                        <Button
-                          background="#F4F4F4"
-                          colorScheme="gray"
-                          color="#9F9F9F"
-                          size="md"
-                          borderRadius={54}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          bg={theme.colors.primary}
-                          colorScheme="yellow"
-                          size="md"
-                          borderRadius={54}
-                          isLoading={isSubmitting}
-                          type="submit"
-                        >
-                          Save Changes
-                        </Button>
-                      </HStack>
-                    </Flex>
-
-                    {renderSectionTitle("GENERALS")}
-                    <Stack
-                      direction={{ md: "row" }}
-                      spacing={{ base: 3, md: 10 }}
-                      flexWrap={{ base: "wrap", md: "nowrap" }}
-                    >
-                      {renderInput("first_name", "First name", "text", 1, "", {
-                        required: true,
-                      })}
-                      {renderInput("last_name", "Last name", "text", 2, "", {
-                        required: true,
-                      })}
-                      {renderInput("email", "Email", "email", 3, "", {
-                        disabled: true,
-                      })}
-                    </Stack>
-                    <Stack
-                      direction={{ base: "column", md: "row" }}
-                      spacing={{ base: 3, md: 10 }}
-                    >
-                      <FormControl
-                        isInvalid={!!errors.password && touched.password}
-                        mb={5}
+                  {({ isSubmitting, errors, touched }) => (
+                    <Form>
+                      <Flex
+                        gap="30px"
+                        direction={{ base: "column", lg: "row" }}
                       >
-                        <FormLabel>Password</FormLabel>
-                        <Field
-                          as={Input}
-                          name="password"
-                          tabIndex={4}
-                          type="password"
-                          focusBorderColor={theme.colors.primary}
-                          variant="flushed"
-                          placeholder="***************"
-                          validate={(value) => {
-                            return validatePassword(value);
-                          }}
-                          onChange={(e) => {
-                            setUserMetadata({
-                              ...userMetadata,
-                              password: e.target.value,
-                            });
-                          }}
-                        />
-                        <FormErrorMessage>{errors.password}</FormErrorMessage>
-                      </FormControl>
+                        <Box flex={4} bg="white" borderRadius={20} p="25px">
+                          <Flex
+                            px="15px"
+                            py="8px"
+                            direction={{ base: "column", lg: "row" }}
+                          >
+                            <HStack>
+                              <Text
+                                fontSize={16}
+                                fontWeight={800}
+                                color={theme.colors.primary}
+                              >
+                                Profile /
+                              </Text>
+                              <Text fontSize={16} color="gray.500">
+                                Edit Profile
+                              </Text>
+                            </HStack>
+                            <Spacer />
+                            <HStack>
+                              <Button className={cancelButton}>Cancel</Button>
+                              <Button
+                                bg={theme.colors.primary}
+                                colorScheme="yellow"
+                                size="md"
+                                borderRadius={54}
+                                isLoading={isSubmitting}
+                                type="submit"
+                              >
+                                Save Changes
+                              </Button>
+                            </HStack>
+                          </Flex>
 
-                      <FormControl
-                        isInvalid={
-                          !!errors.retype_password && touched.retype_password
-                        }
-                        mb={5}
-                      >
-                        <FormLabel>Re-Type Password</FormLabel>
-                        <Field
-                          as={Input}
-                          name="retype_password"
-                          tabIndex={5}
-                          type="password"
-                          focusBorderColor={theme.colors.primary}
-                          variant="flushed"
-                          placeholder="***************"
-                          validate={(value) => {
-                            if (value !== password) {
-                              return "Password does not match";
-                            }
-                          }}
-                        />
-                        <FormErrorMessage>
-                          {errors.retype_password}
-                        </FormErrorMessage>
-                      </FormControl>
+                          {renderSectionTitle("GENERALS")}
+                          <Stack
+                            direction={{ md: "row" }}
+                            spacing={{ base: 3, md: 10 }}
+                            flexWrap={{ base: "wrap", md: "nowrap" }}
+                          >
+                            {renderInput(
+                              "first_name",
+                              "First name",
+                              "text",
+                              "",
+                              {
+                                required: true,
+                              }
+                            )}
+                            {renderInput("last_name", "Last name", "text", "", {
+                              required: true,
+                            })}
+                            {renderInput("email", "Email", "email", "", {
+                              disabled: true,
+                            })}
+                          </Stack>
+                          <Stack
+                            direction={{ base: "column", md: "row" }}
+                            spacing={{ base: 3, md: 10 }}
+                          >
+                            <FormControl
+                              isInvalid={!!errors.password && touched.password}
+                              mb={5}
+                            >
+                              <FormLabel>Password</FormLabel>
+                              <Field
+                                as={Input}
+                                name="password"
+                                type="password"
+                                focusBorderColor={theme.colors.primary}
+                                variant="flushed"
+                                placeholder="***************"
+                                validate={(value) => {
+                                  return validatePassword(value);
+                                }}
+                                onChange={(e) => {
+                                  setUserMetadata({
+                                    ...userMetadata,
+                                    password: e.target.value,
+                                  });
+                                }}
+                              />
+                              <FormErrorMessage>
+                                {errors.password}
+                              </FormErrorMessage>
+                            </FormControl>
 
-                      {renderInput(
-                        "phone",
-                        "Phone Number",
-                        "tel",
-                        6,
-                        "+5012345678"
-                      )}
-                    </Stack>
+                            <FormControl
+                              isInvalid={
+                                !!errors.retype_password &&
+                                touched.retype_password
+                              }
+                              mb={5}
+                            >
+                              <FormLabel>Re-Type Password</FormLabel>
+                              <Field
+                                as={Input}
+                                name="retype_password"
+                                type="password"
+                                focusBorderColor={theme.colors.primary}
+                                variant="flushed"
+                                placeholder="***************"
+                                validate={(value) => {
+                                  if (value !== password) {
+                                    return "Password does not match";
+                                  }
+                                }}
+                              />
+                              <FormErrorMessage>
+                                {errors.retype_password}
+                              </FormErrorMessage>
+                            </FormControl>
 
-                    {renderSectionTitle("ADDRESS")}
-                    <Stack
-                      direction={{ md: "row" }}
-                      spacing={{ base: 3, md: 10 }}
-                      flexWrap={{ base: "wrap", md: "nowrap" }}
-                    >
-                      {renderInput(
-                        "address",
-                        "Address",
-                        "text",
-                        7,
-                        "Street name, house number"
-                      )}
+                            {renderInput(
+                              "phone",
+                              "Phone Number",
+                              "tel",
+                              "+5012345678"
+                            )}
+                          </Stack>
 
-                      {renderInput("city", "City", "text", 8)}
+                          {renderSectionTitle("ADDRESS")}
+                          <Stack
+                            direction={{ md: "row" }}
+                            spacing={{ base: 3, md: 10 }}
+                            flexWrap={{ base: "wrap", md: "nowrap" }}
+                          >
+                            {renderInput(
+                              "address",
+                              "Address",
+                              "text",
+                              "Street name, house number"
+                            )}
 
-                      <FormControl>
-                        <FormLabel>Country</FormLabel>
-                        <Select
-                          name="country"
-                          tabIndex={9}
-                          focusBorderColor={theme.colors.primary}
-                          variant="flushed"
-                          placeholder=""
-                          value={userMetadata.country || "CA"}
-                          onChange={(e) => {
-                            setUserMetadata({
-                              ...userMetadata,
-                              country: e.target.value,
-                            });
-                          }}
+                            {renderInput("city", "City", "text")}
+
+                            <FormControl>
+                              <FormLabel>Country</FormLabel>
+                              <Select
+                                name="country"
+                                focusBorderColor={theme.colors.primary}
+                                variant="flushed"
+                                placeholder=""
+                                value={userMetadata.country || "CA"}
+                                onChange={(e) => {
+                                  setUserMetadata({
+                                    ...userMetadata,
+                                    country: e.target.value,
+                                  });
+                                }}
+                              >
+                                {countryArr.map(({ label, value }) => (
+                                  <option key={value} value={value}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Stack>
+
+                          {renderSectionTitle("ABOUT ME")}
+                          <Textarea
+                            name="about_me"
+                            className={textarea}
+                            focusBorderColor={theme.colors.primary}
+                            placeholder="Write something about yourself"
+                            value={userMetadata.about_me || ""}
+                            onChange={(e) => {
+                              setUserMetadata({
+                                ...userMetadata,
+                                about_me: e.target.value,
+                              });
+                            }}
+                          />
+                        </Box>
+
+                        <Box
+                          flex={1}
+                          bg="white"
+                          borderRadius={20}
+                          p="25px"
+                          display="flex"
+                          justifyContent="center"
+                          //h="550px"
                         >
-                          {countryArr.map(({ label, value }) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Stack>
-
-                    {renderSectionTitle("ABOUT ME")}
-                    <Textarea
-                      name="about_me"
-                      tabIndex={9}
-                      h="150px"
-                      bg="#FBFBFB"
-                      borderRadius="20px"
-                      border="1px solid #C2C2C2"
-                      padding="20px"
-                      resize="none"
-                      mb={20}
-                      focusBorderColor={theme.colors.primary}
-                      placeholder="Write something about yourself"
-                      value={userMetadata.about_me || ""}
-                      onChange={(e) => {
-                        setUserMetadata({
-                          ...userMetadata,
-                          about_me: e.target.value,
-                        });
-                      }}
-                    />
-                  </Box>
-                  <Box
-                    flex={1}
-                    bg="white"
-                    borderRadius={20}
-                    p="25px"
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    <VStack>
-                      <Circle size="152px" bg={theme.colors.primary}>
-                        {isUploadingPicture ? (
-                          <CustomSpinner />
-                        ) : (
-                          <Image
-                            src={initialValues.profile_picture}
-                            alt="profile picture"
-                            maxW="122px"
-                            maxH="122px"
-                            borderRadius="122px"
-                            border="4px solid white"
-                            cursor="pointer"
-                            opacity={onPictureHover ? 0.4 : 1}
-                            onClick={handleUploadClick}
-                            onMouseEnter={() => setOnPictureHover(true)}
-                            onMouseLeave={() => setOnPictureHover(false)}
-                          />
-                        )}
-                        {onPictureHover && (
-                          <Icon
-                            as={CameraIcon}
-                            boxSize="30px"
-                            cursor="pointer"
-                            position="absolute"
-                            onClick={handleUploadClick}
-                          />
-                        )}
-                      </Circle>
-                      <Input
-                        type="file"
-                        name="profile_picture"
-                        ref={fileInputRef}
-                        onChange={uploadImage}
-                        accept="image/*"
-                        opacity={0}
-                        h={0}
-                        zIndex={-1}
-                      />
-
-                      <Text fontSize={22} fontWeight={500}>
-                        {`${userMetadata.first_name} ${userMetadata.last_name}`}
-                      </Text>
-                      <Text>Breeder</Text>
-                      {/*<Text>Verified By USA</Text>*/}
-
-                      <HStack mt={2}>
-                        <Center className={followerBox}>
                           <VStack>
-                            <Text fontSize={22} fontWeight={600}>
-                              {userMetadata.following || 0}
+                            {isUploadingPicture ? (
+                              <CustomSpinner />
+                            ) : (
+                              <Image
+                                src={userMetadata.profile_picture}
+                                className={imgCircle}
+                                alt="profile picture"
+                                maxW="152px"
+                                maxH="152px"
+                                border={`6px solid ${theme.colors.primary}`}
+                                opacity={onPictureHover ? 0.4 : 1}
+                                onClick={handleUploadClick}
+                                onMouseEnter={() => setOnPictureHover(true)}
+                                onMouseLeave={() => setOnPictureHover(false)}
+                              />
+                            )}
+                            {onPictureHover && (
+                              <Icon
+                                as={CameraIcon}
+                                boxSize="30px"
+                                cursor="pointer"
+                                position="absolute"
+                                mt="50px"
+                                onClick={handleUploadClick}
+                              />
+                            )}
+                            <Input
+                              type="file"
+                              name="profile_picture"
+                              ref={fileInputRef}
+                              onChange={uploadImage}
+                              accept="image/*"
+                              opacity={0}
+                              h={0}
+                            />
+
+                            <Text fontSize={22} fontWeight={500}>
+                              {`${userMetadata.first_name} ${userMetadata.last_name}`}
                             </Text>
-                            <Text>Following</Text>
+                            <Text>Breeder</Text>
+                            {/*<Text>Verified By USA</Text>*/}
+
+                            <HStack mt={2}>
+                              <Center className={followerBox}>
+                                <VStack>
+                                  <Text fontSize={22} fontWeight={600}>
+                                    {userMetadata.following || 0}
+                                  </Text>
+                                  <Text>Following</Text>
+                                </VStack>
+                              </Center>
+                              <Center className={followerBox}>
+                                <VStack>
+                                  <Text fontSize={22} fontWeight={600}>
+                                    {userMetadata.followers || 0}
+                                  </Text>
+                                  <Text>Followers</Text>
+                                </VStack>
+                              </Center>
+                            </HStack>
+
+                            <Divider my={5} />
+
+                            {userMetadata.phone && (
+                              <HStack w="100%" textAlign="left">
+                                <Circle className={profileIcon}>
+                                  <Icon as={TelephoneIcon} boxSize="24px" />
+                                </Circle>
+                                <Text>{userMetadata.phone}</Text>
+                              </HStack>
+                            )}
+                            <HStack w="100%" textAlign="left">
+                              <Circle className={profileIcon}>
+                                <Icon as={EmailIcon} boxSize="24px" />
+                              </Circle>
+                              <Text>{userMetadata.email}</Text>
+                            </HStack>
+
+                            {/*<Text fontSize={22} fontWeight={500} mt={5}>
+                                Breeder Performance
+                              </Text>*/}
                           </VStack>
-                        </Center>
-                        <Center className={followerBox}>
-                          <VStack>
-                            <Text fontSize={22} fontWeight={600}>
-                              {userMetadata.followers || 0}
-                            </Text>
-                            <Text>Followers</Text>
-                          </VStack>
-                        </Center>
-                      </HStack>
+                        </Box>
+                      </Flex>
+                    </Form>
+                  )}
+                </Formik>
+              </AccordionPanel>
+            </AccordionItem>
 
-                      <Divider my={5} />
+            <AccordionItem>
+              <AccordionButton>
+                <AccordionIcon fontSize={30} />
+                <Text fontSize={28} fontWeight={600}>
+                  &emsp;My Puppies
+                </Text>
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                <Box bg="white" borderRadius={20} p="25px">
+                  <Flex>
+                    <Spacer />
+                    <Button
+                      bg={theme.colors.primary}
+                      colorScheme="yellow"
+                      size="md"
+                      borderRadius={54}
+                      onClick={onOpen}
+                    >
+                      Add Puppy
+                    </Button>
+                  </Flex>
 
-                      {userMetadata.phone && (
-                        <HStack w="100%" textAlign="left">
-                          <Circle className={profileIcon}>
-                            <Icon as={TelephoneIcon} boxSize="24px" />
-                          </Circle>
-                          <Text>{userMetadata.phone}</Text>
-                        </HStack>
-                      )}
-                      <HStack w="100%" textAlign="left">
-                        <Circle className={profileIcon}>
-                          <Icon as={EmailIcon} boxSize="24px" />
-                        </Circle>
-                        <Text>{userMetadata.email}</Text>
-                      </HStack>
-
-                      {/*<Text fontSize={22} fontWeight={500} mt={5}>
-                        Breeder Performance
-                      </Text>*/}
-                    </VStack>
-                  </Box>
-                </Flex>
-              </Form>
-            )}
-          </Formik>
+                  <UploadPuppyPage
+                    userId={user.sub}
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    setUploadSuccessAlert={setUploadSuccessAlert}
+                  />
+                </Box>
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
         </Box>
       </ChakraProvider>
     )
