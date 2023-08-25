@@ -19,8 +19,6 @@ import {
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
-  Alert,
-  AlertIcon,
   ChakraProvider,
   Box,
   Button,
@@ -42,19 +40,21 @@ import {
   Spacer,
   VStack,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 
 import { getCookie } from "../../cookie-manager";
 import Header from "../../components/header";
 import Seo from "../../components/seo";
 import CustomSpinner from "../../components/spinner";
-import { storage } from "../../firebase";
+import { db, storage } from "../../firebase";
 import theme from "../../theme";
 
 import CameraIcon from "../../images/icons/camera.inline.svg";
 import EmailIcon from "../../images/icons/email.inline.svg";
 import TelephoneIcon from "../../images/icons/telephone.inline.svg";
 
+import ListPuppyTable from "./list-puppy";
 import UploadPuppyPage from "./upload-puppy";
 
 import {
@@ -92,11 +92,14 @@ const BreederProfile = () => {
   const [isFormLoading, setIsFormLoading] = useState(true);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [onPictureHover, setOnPictureHover] = useState(false);
-  const [error, setError] = useState(null);
-  const [uploadSuccessAlert, setUploadSuccessAlert] = useState(null);
+  const [errorAlert, setErrorAlert] = useState(null);
+  const [successAlert, setSuccessAlert] = useState(null);
+  const [modalAction, setModalAction] = useState("add");
+  const [modalData, setModalData] = useState({});
 
   const fileInputRef = useRef(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -135,9 +138,9 @@ const BreederProfile = () => {
           );
           setOriginalMetadata(userMetadata);
           setConnection(data.identities[0].connection);
-          setError(null);
+          setErrorAlert(null);
         } catch (error) {
-          setError(error?.response?.data || error.message);
+          setErrorAlert(error?.response?.data || error.message);
         }
         setIsFormLoading(false);
       }
@@ -146,12 +149,30 @@ const BreederProfile = () => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    if (uploadSuccessAlert) {
-      setTimeout(() => {
-        setUploadSuccessAlert(null);
-      }, 3000);
+    if (successAlert) {
+      toast({
+        description: successAlert,
+        status: "success",
+        duration: 8000,
+        isClosable: true,
+        position: "top-right",
+      });
+      setSuccessAlert(null);
     }
-  }, [uploadSuccessAlert]);
+  }, [successAlert]);
+
+  useEffect(() => {
+    if (errorAlert) {
+      toast({
+        description: errorAlert,
+        status: "error",
+        duration: 8000,
+        isClosable: true,
+        position: "top-right",
+      });
+      setErrorAlert(null);
+    }
+  }, [errorAlert]);
 
   const renderSectionTitle = (title) => {
     return isLoading ? (
@@ -215,9 +236,9 @@ const BreederProfile = () => {
         },
       });
       setOriginalMetadata(userMetadata);
-      setError(null);
+      setErrorAlert(null);
     } catch (e) {
-      setError(e?.response?.data || e.message);
+      setErrorAlert(e?.response?.data || e.message);
     }
     actions.setSubmitting(false);
   };
@@ -236,9 +257,9 @@ const BreederProfile = () => {
       });
       setUserMetadata({ ...userMetadata, profile_picture: imageUrl });
       setOriginalMetadata(userMetadata);
-      setError(null);
+      setErrorAlert(null);
     } catch (e) {
-      setError(e?.response?.data || e.message);
+      setErrorAlert(e?.response?.data || e.message);
     }
     setIsUploadingPicture(false);
   };
@@ -267,22 +288,28 @@ const BreederProfile = () => {
     return "";
   };
 
-  countries.registerLocale(en);
-  const countryObj = countries.getNames("en", { select: "official" });
-  const countryArr = Object.entries(countryObj).map(([key, value]) => {
-    return {
-      label: value,
-      value: key,
-    };
-  });
-
   const handleUploadClick = () => {
     fileInputRef.current.click();
   };
 
-  const uploadImage = async (event) => {
+  const validateImage = (file) => {
+    const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+    if (!isJpgOrPng) {
+      setErrorAlert("You can only upload JPG/PNG file");
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      setErrorAlert("Image must be smaller than 2MB");
+    }
+    return isJpgOrPng && isLt2M;
+  };
+
+  const handleUploadImage = async (event) => {
     const file = event.target.files[0];
     if (file) {
+      if (!validateImage(file)) {
+        return;
+      }
       setIsUploadingPicture(true);
       const userId = user ? user.sub.split("|")[1] : "";
       const storageRef = ref(storage, `users/${userId}/profile_picture.png`);
@@ -297,30 +324,27 @@ const BreederProfile = () => {
         const imageUrl = await getDownloadURL(snapshot.ref);
 
         await updateUserProfilePicture(imageUrl);
-        setError(null);
+        setErrorAlert(null);
       } catch (error) {
-        setError("Error uploading image. Please try again.");
-        console.error("Error uploading image:", error);
+        setErrorAlert("Error uploading image. Please try again.");
+        console.log("Error uploading image:", error);
         setIsUploadingPicture(false);
       }
     }
   };
 
+  countries.registerLocale(en);
+  const countryObj = countries.getNames("en", { select: "official" });
+  const countryArr = Object.entries(countryObj).map(([key, value]) => {
+    return {
+      label: value,
+      value: key,
+    };
+  });
+
   return (
     !isFormLoading && (
       <ChakraProvider theme={theme}>
-        {error && (
-          <Alert status="error">
-            <AlertIcon />
-            {error}
-          </Alert>
-        )}
-        {uploadSuccessAlert && (
-          <Alert status="success">
-            <AlertIcon />
-            {uploadSuccessAlert}
-          </Alert>
-        )}
         <Box
           w="100%"
           px="1.5rem"
@@ -330,7 +354,7 @@ const BreederProfile = () => {
         >
           <Header isAuthenticated={isAuthenticated} user={user} role={role} />
 
-          <Accordion defaultIndex={[0]} allowMultiple>
+          <Accordion defaultIndex={[0, 1]} allowMultiple>
             <AccordionItem>
               <AccordionButton>
                 <AccordionIcon fontSize={30} />
@@ -568,7 +592,7 @@ const BreederProfile = () => {
                               type="file"
                               name="profile_picture"
                               ref={fileInputRef}
-                              onChange={uploadImage}
+                              onChange={handleUploadImage}
                               accept="image/*"
                               opacity={0}
                               h={0}
@@ -637,24 +661,42 @@ const BreederProfile = () => {
               </AccordionButton>
               <AccordionPanel pb={4}>
                 <Box bg="white" borderRadius={20} p="25px">
-                  <Flex>
+                  <Flex mb={3}>
                     <Spacer />
                     <Button
                       bg={theme.colors.primary}
                       colorScheme="yellow"
                       size="md"
                       borderRadius={54}
-                      onClick={onOpen}
+                      onClick={() => {
+                        setModalAction("add");
+                        setModalData({});
+                        onOpen();
+                      }}
                     >
                       Add Puppy
                     </Button>
                   </Flex>
 
+                  <ListPuppyTable
+                    userId={user.sub}
+                    db={db}
+                    refreshTable={successAlert}
+                    openModal={onOpen}
+                    setModalAction={setModalAction}
+                    setModalData={setModalData}
+                    setSuccessAlert={setSuccessAlert}
+                  />
+
                   <UploadPuppyPage
                     userId={user.sub}
                     isOpen={isOpen}
                     onClose={onClose}
-                    setUploadSuccessAlert={setUploadSuccessAlert}
+                    setSuccessAlert={setSuccessAlert}
+                    db={db}
+                    storage={storage}
+                    action={modalAction}
+                    puppyData={modalData}
                   />
                 </Box>
               </AccordionPanel>

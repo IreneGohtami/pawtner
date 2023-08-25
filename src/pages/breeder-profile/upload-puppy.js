@@ -1,5 +1,6 @@
 import axios from "axios";
-import { collection, addDoc } from "firebase/firestore";
+import moment from "moment";
+import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
@@ -21,7 +22,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   NumberInput,
   NumberInputField,
@@ -34,7 +34,6 @@ import {
 
 import { getCookie, setCookie } from "../../cookie-manager";
 import CustomSpinner from "../../components/spinner";
-import { db, storage } from "../../firebase";
 import CameraIcon from "../../images/icons/camera.inline.svg";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -44,15 +43,24 @@ import {
   imgCircle,
   puppyFormInput,
   textarea,
-  uploadCircle,
 } from "./breeder-profile.module.css";
 
-function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
+const UploadPuppyPage = ({
+  userId,
+  isOpen,
+  onClose,
+  setSuccessAlert,
+  db,
+  storage,
+  action,
+  puppyData,
+}) => {
   const theme = useTheme();
   const initialRef = useRef(null);
   const finalRef = useRef(null);
 
   const emptyForm = {
+    owner_id: userId,
     name: "",
     breed: "",
     gender: "",
@@ -114,18 +122,25 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
     listDogBreed();
   }, []);
 
+  useEffect(() => {
+    setTimeout(() => {
+      setForm(action !== "add" ? puppyData : emptyForm);
+    }, 300);
+  }, [action, puppyData]);
+
   const inputProperties = (name, cursor = "pointer") => ({
     name,
     className: puppyFormInput,
     focusBorderColor: theme.colors.primary,
     variant: "outline",
     placeholder: name.charAt(0).toUpperCase() + name.slice(1),
-    required: "required",
     cursor,
     value: form[name],
     onChange: (e) => {
-      setForm({ ...form, [name]: e.target.value });
+      const value = e.target.value;
+      setForm({ ...form, [name]: name === "price" ? Number(value) : value });
     },
+    isReadOnly: action === "view",
   });
 
   const handleUploadPuppy = async () => {
@@ -140,7 +155,10 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
       setUploadError("Please re-login to upload puppy");
     }
 
+    let puppyPictureUrl = "";
+    let isPictureChanged = false;
     if (form.picture && imageUrl) {
+      isPictureChanged = true;
       try {
         // Upload picture to firebase storage
         const puppyId = uid();
@@ -150,26 +168,48 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
         );
 
         const snapshot = await uploadBytes(storageRef, form.picture);
-        const puppyPictureUrl = await getDownloadURL(snapshot.ref);
+        puppyPictureUrl = await getDownloadURL(snapshot.ref);
         setForm({ ...form, picture: puppyPictureUrl });
       } catch (error) {
         setUploadError("Error uploading puppy image. Please try again.");
+        setIsSubmitting(false);
         setForm({ ...form, picture: "" });
         console.log("Error uploading puppy image:", error);
         return;
       }
     }
 
+    const formattedDate = form.rehoming_date
+      ? moment(form.rehoming_date).format("DD/MM/YYYY")
+      : "";
+    // React setForm is async and doesn't reflect the form value immediately
+    const formExt = {
+      rehoming_date: formattedDate,
+      ...(isPictureChanged ? { picture: puppyPictureUrl } : {}),
+    };
+
     try {
       // Upload puppy detail to firebase database
-      await addDoc(collection(db, "puppy"), form);
+      if (action === "edit") {
+        const puppyRef = doc(db, "puppy", puppyData.id);
+        delete form.id;
+        await updateDoc(puppyRef, { ...form, ...formExt });
+      } else {
+        await addDoc(collection(db, "puppy"), {
+          ...form,
+          ...formExt,
+        });
+      }
     } catch (error) {
       setUploadError("Error uploading puppy. Please try again.");
+      setIsSubmitting(false);
       console.log("Error uploading puppy to DB:", error);
       return;
     }
 
-    setUploadSuccessAlert("Puppy uploaded successfully!");
+    setSuccessAlert(
+      `Puppy ${action === "edit" ? "updated" : "uploaded"} successfully!`
+    );
     setIsSubmitting(false);
     closeModal();
   };
@@ -250,26 +290,29 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
       <ModalContent p={5}>
         <ModalHeader>
           <Flex>
-            <Text fontSize={22}>Upload Here</Text>
+            <Text fontSize={22}>Puppy Details</Text>
             <Spacer />
             <Button
               className={cancelButton}
               onClick={closeModal}
               ref={finalRef}
+              w="120px"
             >
-              Cancel
+              {action !== "view" ? "Cancel" : "Close"}
             </Button>
-            <Button
-              bg={theme.colors.primary}
-              colorScheme="yellow"
-              borderRadius={54}
-              ml={3}
-              w="160px"
-              onClick={handleUploadPuppy}
-              isLoading={isSubmitting}
-            >
-              Upload
-            </Button>
+            {action !== "view" && (
+              <Button
+                bg={theme.colors.primary}
+                colorScheme="yellow"
+                borderRadius={54}
+                ml={3}
+                w="160px"
+                onClick={handleUploadPuppy}
+                isLoading={isSubmitting}
+              >
+                {action === "edit" ? "Update" : "Upload"}
+              </Button>
+            )}
           </Flex>
         </ModalHeader>
         <ModalBody>
@@ -288,39 +331,40 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
                     <CustomSpinner />
                   ) : (
                     <>
-                      <Upload
-                        name="picture"
-                        accept="image/*"
-                        className={uploadCircle}
-                        showUploadList={false}
-                        beforeUpload={validateImage}
-                        onChange={handleChange}
-                      >
-                        {!imageUrl ? (
-                          <Box textAlign="center">
-                            <PlusOutlined /> Add puppy picture
-                          </Box>
-                        ) : (
-                          <Icon
-                            as={CameraIcon}
-                            boxSize="30px"
-                            cursor="pointer"
-                            position="relative"
-                            zIndex="1"
-                          />
-                        )}
-                      </Upload>
+                      {action !== "view" && (
+                        <Upload
+                          name="picture"
+                          accept="image/*"
+                          showUploadList={false}
+                          beforeUpload={validateImage}
+                          onChange={handleChange}
+                        >
+                          {!imageUrl && !form.picture ? (
+                            <Box textAlign="center">
+                              <PlusOutlined /> Add puppy picture
+                            </Box>
+                          ) : (
+                            <Icon
+                              as={CameraIcon}
+                              boxSize="30px"
+                              cursor="pointer"
+                              position="relative"
+                              zIndex="1"
+                            />
+                          )}
+                        </Upload>
+                      )}
                     </>
                   )}
-                  {imageUrl && (
+                  {(imageUrl || form.picture) && (
                     <Image
-                      src={imageUrl}
+                      src={imageUrl || form.picture}
                       alt="puppy profile picture"
                       className={imgCircle}
                       maxW="250px"
                       maxH="250px"
                       position="absolute"
-                      opacity={onPictureHover ? 0.4 : 1}
+                      opacity={onPictureHover && action !== "view" ? 0.4 : 1}
                       onMouseEnter={() => setOnPictureHover(true)}
                       onMouseLeave={() => setOnPictureHover(false)}
                     />
@@ -333,24 +377,41 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
               </FormControl>
               <HStack mb={5}>
                 <FormControl isInvalid={isValidating && !form.breed}>
-                  <Select {...inputProperties("breed")}>
-                    {breedList.map((breed) => (
-                      <option key={breed} value={breed}>
-                        {breed.charAt(0).toUpperCase() + breed.slice(1)}
-                      </option>
-                    ))}
-                  </Select>
+                  {action === "view" ? (
+                    <Input
+                      ref={initialRef}
+                      {...inputProperties("breed", "text")}
+                      value={
+                        form.breed.charAt(0).toUpperCase() + form.breed.slice(1)
+                      }
+                    />
+                  ) : (
+                    <Select {...inputProperties("breed")}>
+                      {breedList.map((breed) => (
+                        <option key={breed} value={breed}>
+                          {breed.charAt(0).toUpperCase() + breed.slice(1)}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
                   {renderErrorMessage()}
                 </FormControl>
                 <FormControl isInvalid={isValidating && !form.gender}>
-                  <Select {...inputProperties("gender")}>
-                    <option key="male" value="male">
-                      Male
-                    </option>
-                    <option key="female" value="female">
-                      Female
-                    </option>
-                  </Select>
+                  {action === "view" ? (
+                    <Input
+                      ref={initialRef}
+                      {...inputProperties("gender", "text")}
+                    />
+                  ) : (
+                    <Select {...inputProperties("gender")}>
+                      <option key="male" value="Male">
+                        Male
+                      </option>
+                      <option key="female" value="Female">
+                        Female
+                      </option>
+                    </Select>
+                  )}
                   {renderErrorMessage()}
                 </FormControl>
               </HStack>
@@ -359,20 +420,41 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
                   <Input {...inputProperties("location", "text")} />
                 </FormControl>
                 <FormControl isInvalid={isValidating && !form.color}>
-                  <Select {...inputProperties("color")}>
-                    {colors.map((color) => (
-                      <option key={color} value={color}>
-                        {color}
-                      </option>
-                    ))}
-                  </Select>
+                  {action === "view" ? (
+                    <Input
+                      ref={initialRef}
+                      {...inputProperties("color", "text")}
+                    />
+                  ) : (
+                    <Select {...inputProperties("color")}>
+                      {colors.map((color) => (
+                        <option key={color} value={color}>
+                          {color}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
                   {renderErrorMessage()}
                 </FormControl>
               </HStack>
               <HStack mb={5}>
                 <FormControl isInvalid={isValidating && !form.price}>
-                  <NumberInput min={0} focusBorderColor={theme.colors.primary}>
-                    <NumberInputField {...inputProperties("price", "text")} />
+                  <NumberInput
+                    name="price"
+                    min={0}
+                    focusBorderColor={theme.colors.primary}
+                    value={form.price}
+                    isReadOnly={action === "view"}
+                    onChange={(value) => {
+                      setForm({ ...form, price: Number(value) });
+                    }}
+                  >
+                    <NumberInputField
+                      className={puppyFormInput}
+                      focusBorderColor={theme.colors.primary}
+                      variant="outline"
+                      placeholder="Price"
+                    />
                   </NumberInput>
                   {renderErrorMessage()}
                 </FormControl>
@@ -382,11 +464,18 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
                     placeholderText="Rehoming Date"
                     dateFormat="dd/MM/yyyy"
                     className={`${puppyFormInput} ${datePicker}`}
-                    selected={form.rehoming_date || new Date()}
-                    value={form.rehoming_date}
-                    onChange={(date) =>
-                      setForm({ ...form, rehoming_date: date })
+                    selected={
+                      form.rehoming_date
+                        ? moment(form.rehoming_date, "DD/MM/YYYY").toDate()
+                        : ""
                     }
+                    onChange={(date) => {
+                      setForm({
+                        ...form,
+                        rehoming_date: date,
+                      });
+                    }}
+                    readOnly={action === "view"}
                   />
                 </FormControl>
               </HStack>
@@ -409,17 +498,16 @@ function UploadPuppyPage({ userId, isOpen, onClose, setUploadSuccessAlert }) {
                   onChange={(e) => {
                     setForm({ ...form, about_puppy: e.target.value });
                   }}
+                  isReadOnly={action === "view"}
                 />
               </FormControl>
             </Box>
             <Spacer />
           </Flex>
         </ModalBody>
-
-        <ModalFooter></ModalFooter>
       </ModalContent>
     </Modal>
   );
-}
+};
 
 export default UploadPuppyPage;
