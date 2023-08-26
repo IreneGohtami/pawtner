@@ -681,11 +681,13 @@ const BreederProfile = () => {
                   <ListPuppyTable
                     userId={user.sub}
                     db={db}
+                    storage={storage}
                     refreshTable={successAlert}
                     openModal={onOpen}
                     setModalAction={setModalAction}
                     setModalData={setModalData}
                     setSuccessAlert={setSuccessAlert}
+                    setErrorAlert={setErrorAlert}
                   />
 
                   <UploadPuppyPage

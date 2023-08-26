@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { StaticImage } from "gatsby-plugin-image";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
-  Box,
   Center,
   Grid,
   GridItem,

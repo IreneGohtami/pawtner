@@ -1,4 +1,5 @@
 import axios from "axios";
+import { isEmpty } from "lodash";
 import moment from "moment";
 import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
@@ -69,7 +70,7 @@ const UploadPuppyPage = ({
     price: 0,
     rehoming_date: "",
     about_puppy: "",
-    picture: "",
+    picture: null,
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -125,6 +126,11 @@ const UploadPuppyPage = ({
   useEffect(() => {
     setTimeout(() => {
       setForm(action !== "add" ? puppyData : emptyForm);
+      setImageUrl(
+        action !== "add" && !isEmpty(puppyData.picture)
+          ? puppyData.picture.url
+          : ""
+      );
     }, 300);
   }, [action, puppyData]);
 
@@ -155,16 +161,17 @@ const UploadPuppyPage = ({
       setUploadError("Please re-login to upload puppy");
     }
 
+    const puppyImageRefId = uid();
     let puppyPictureUrl = "";
     let isPictureChanged = false;
+
     if (form.picture && imageUrl) {
       isPictureChanged = true;
       try {
         // Upload picture to firebase storage
-        const puppyId = uid();
         const storageRef = ref(
           storage,
-          `users/${userId}/puppies/${puppyId}.png`
+          `users/${userId}/puppies/${puppyImageRefId}.png`
         );
 
         const snapshot = await uploadBytes(storageRef, form.picture);
@@ -173,7 +180,7 @@ const UploadPuppyPage = ({
       } catch (error) {
         setUploadError("Error uploading puppy image. Please try again.");
         setIsSubmitting(false);
-        setForm({ ...form, picture: "" });
+        setForm({ ...form, picture: null });
         console.log("Error uploading puppy image:", error);
         return;
       }
@@ -182,10 +189,19 @@ const UploadPuppyPage = ({
     const formattedDate = form.rehoming_date
       ? moment(form.rehoming_date).format("DD/MM/YYYY")
       : "";
+    const now = moment().format("YYYY-MM-DD HH:mm:ss");
+
     // React setForm is async and doesn't reflect the form value immediately
     const formExt = {
       rehoming_date: formattedDate,
-      ...(isPictureChanged ? { picture: puppyPictureUrl } : {}),
+      ...(isPictureChanged && {
+        picture: {
+          reference: puppyImageRefId,
+          url: puppyPictureUrl,
+        },
+      }),
+      ...(action === "add" && { created_at: now }),
+      updated_at: now,
     };
 
     try {
@@ -339,7 +355,7 @@ const UploadPuppyPage = ({
                           beforeUpload={validateImage}
                           onChange={handleChange}
                         >
-                          {!imageUrl && !form.picture ? (
+                          {!imageUrl ? (
                             <Box textAlign="center">
                               <PlusOutlined /> Add puppy picture
                             </Box>
@@ -356,9 +372,9 @@ const UploadPuppyPage = ({
                       )}
                     </>
                   )}
-                  {(imageUrl || form.picture) && (
+                  {imageUrl && (
                     <Image
-                      src={imageUrl || form.picture}
+                      src={imageUrl}
                       alt="puppy profile picture"
                       className={imgCircle}
                       maxW="250px"

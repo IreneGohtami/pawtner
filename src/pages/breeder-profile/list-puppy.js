@@ -1,3 +1,4 @@
+import { isEmpty } from "lodash";
 import {
   collection,
   doc,
@@ -5,7 +6,9 @@ import {
   deleteDoc,
   query,
   where,
+  orderBy,
 } from "firebase/firestore";
+import { ref, deleteObject } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -40,11 +43,13 @@ import { tableRow, actionIcon } from "./breeder-profile.module.css";
 const ListPuppyTable = ({
   userId,
   db,
+  storage,
   refreshTable,
   openModal,
   setModalAction,
   setModalData,
   setSuccessAlert,
+  setErrorAlert,
 }) => {
   const theme = useTheme();
   const [puppyList, setPuppyList] = useState([]);
@@ -52,6 +57,7 @@ const ListPuppyTable = ({
     id: null,
     name: "",
     breed: "",
+    picture: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -59,11 +65,13 @@ const ListPuppyTable = ({
 
   useEffect(() => {
     async function listPuppy() {
+      setIsLoading(true);
       try {
         // Create a query that filters the "puppy" collection by "owner_id"
         const q = query(
           collection(db, "puppy"),
-          where("owner_id", "==", userId)
+          where("owner_id", "==", userId),
+          orderBy("created_at", "asc")
         );
         const querySnapshot = await getDocs(q);
 
@@ -74,6 +82,7 @@ const ListPuppyTable = ({
 
         setPuppyList(data);
       } catch (e) {
+        setErrorAlert("Failed to fetch puppy list. Please try again.");
         console.log(e, "Failed to fetch puppy list");
       }
       setIsLoading(false);
@@ -84,11 +93,24 @@ const ListPuppyTable = ({
   const handleDeletePuppy = async () => {
     setIsDeleting(true);
     try {
-      // Delete puppy from database
+      // Delete puppy record from database
       await deleteDoc(doc(db, "puppy", deletePuppy.id));
+
+      // Delete puppy picture from storage
+      if (!isEmpty(deletePuppy.picture)) {
+        const imageRef = ref(
+          storage,
+          `users/${userId.split("|")[1]}/puppies/${
+            deletePuppy.picture.reference
+          }.png`
+        );
+        await deleteObject(imageRef);
+      }
+
       setSuccessAlert("Puppy deleted successfully!");
       onClose();
     } catch (e) {
+      setErrorAlert("Failed to delete puppy. Please try again.");
       console.log(e, "Failed to delete puppy");
     }
     setIsDeleting(false);
@@ -121,9 +143,9 @@ const ListPuppyTable = ({
                 {puppy.breed.charAt(0).toUpperCase() + puppy.breed.slice(1)}
               </Td>
               <Td>
-                {puppy.picture ? (
+                {!isEmpty(puppy.picture) ? (
                   <Image
-                    src={puppy.picture}
+                    src={puppy.picture.url}
                     alt="puppy picture"
                     w="40px"
                     h="40px"
@@ -167,12 +189,7 @@ const ListPuppyTable = ({
         </Tbody>
       </Table>
 
-      <Modal
-        closeOnOverlayClick={false}
-        isOpen={isOpen}
-        onClose={onClose}
-        isCentered
-      >
+      <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Are you sure you want to delete this puppy?</ModalHeader>
