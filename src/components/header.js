@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { isEmpty } from "lodash";
 import { navigate } from "gatsby";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
@@ -14,16 +15,44 @@ import {
   Text,
   Wrap,
 } from "@chakra-ui/react";
+import { useLocation } from "@reach/router";
+import { getCookie, deleteCookie } from "../cookie-manager";
+
 import PawtnerLogo from "../images/logo.inline.svg";
 import ArrowUpIcon from "../images/icons/arrow-up.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
 import MenuIcon from "../images/icons/menu.inline.svg";
 
-const Header = (props) => {
-  const { loginWithRedirect, logout } = useAuth0();
-  const { isAuthenticated, role } = props;
+const Header = ({ authorizedRole, openSelectOptionModal }) => {
+  const location = useLocation();
+  const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
+  const [role, setRole] = useState([]);
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
+  const isProfilePage = location.pathname === "/breeder-profile/";
+  const isAdminPage = location.pathname === "/admin/";
+
+  useEffect(() => {
+    if (user) {
+      let roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
+      if (!roles.length) {
+        // Try to check cookie
+        roles = getCookie(`role|${user.email}`);
+        roles = !isEmpty(roles) ? JSON.parse(roles) : [];
+        console.log(roles, "roles from cookie");
+        if (authorizedRole === "all" && !roles.length) {
+          openSelectOptionModal();
+        }
+      }
+      console.log(user, roles, "user");
+      setRole(roles || []);
+
+      if (!roles.includes(authorizedRole) && authorizedRole !== "all") {
+        navigate("/");
+        return;
+      }
+    }
+  }, [user]);
 
   return (
     <Flex>
@@ -60,13 +89,26 @@ const Header = (props) => {
               </Text>
             ) : (
               <>
-                <Text mx="30px" fontWeight={600}>
-                  <Link href={role === "breeder" ? "/breeder-profile" : "#"}>
+                {role.includes("admin") && (
+                  <Text ml="30px" fontWeight={isAdminPage ? 600 : 400}>
+                    <Link href="/admin">Admin Panel</Link>
+                  </Text>
+                )}
+                <Text mx="30px" fontWeight={isProfilePage ? 600 : 400}>
+                  <Link
+                    href={role.includes("breeder") ? "/breeder-profile" : "/"}
+                  >
                     Account
                   </Link>
                 </Text>
                 <Text mr="10px">
-                  <Link href="#" onClick={logout}>
+                  <Link
+                    href="#"
+                    onClick={() => {
+                      deleteCookie(`role|${user.email}`);
+                      logout();
+                    }}
+                  >
                     Log Out
                   </Link>
                 </Text>
@@ -89,16 +131,28 @@ const Header = (props) => {
               <option onClick={loginWithRedirect}>Log In</option>
             ) : (
               <>
+                {role.includes("admin") && (
+                  <option onClick={() => navigate("/admin")}>
+                    Admin Panel
+                  </option>
+                )}
                 <option
                   onClick={() => {
-                    role === "breeder"
+                    role.includes("breeder")
                       ? navigate("/breeder-profile")
                       : navigate("/");
                   }}
                 >
                   Account
                 </option>
-                <option onClick={logout}>Log Out</option>
+                <option
+                  onClick={() => {
+                    deleteCookie(`role|${user.email}`);
+                    logout();
+                  }}
+                >
+                  Log Out
+                </option>
               </>
             )}
             <option>ALL ABOUT PUPPY</option>

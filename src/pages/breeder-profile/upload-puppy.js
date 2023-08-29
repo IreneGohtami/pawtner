@@ -71,6 +71,7 @@ const UploadPuppyPage = ({
     rehoming_date: "",
     about_puppy: "",
     picture: null,
+    status: "available", // adopted, unlisted
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -161,12 +162,13 @@ const UploadPuppyPage = ({
       setUploadError("Please re-login to upload puppy");
     }
 
-    const puppyImageRefId = uid();
+    let puppyImageRefId = uid();
     let puppyPictureUrl = "";
     let isPictureChanged = false;
 
     if (form.picture && imageUrl) {
       isPictureChanged = true;
+      puppyImageRefId = puppyData.picture?.reference || puppyImageRefId;
       try {
         // Upload picture to firebase storage
         const storageRef = ref(

@@ -1,4 +1,5 @@
 import axios from "axios";
+import isEmpty from "lodash/isEmpty";
 import corsHandler from "./cors";
 import { getCookie, setAccessTokenCookie } from "../cookie-manager";
 
@@ -52,7 +53,6 @@ export default async function handler(req, res) {
         try {
           const client = await getClient();
           const { data } = await client.get(`users/${userId}/roles`);
-          //console.log(data, "-->get_user_role");
           res.status(200).json(data || {});
         } catch (error) {
           const { data } = error.response;
@@ -65,16 +65,49 @@ export default async function handler(req, res) {
         try {
           const client = await getClient();
           const { data } = await client.get(`users/${userId}`);
-          //console.log(data, "-->get_user_metadata");
 
           res.status(200).json(data || {});
         } catch (error) {
           const { data } = error.response;
-          console.log(data, "heyyy");
           res
             .status(data.statusCode || 500)
             .send(data.message || "Error fetching user metadata.");
         }
+        break;
+      case "get_all_users":
+        try {
+          const client = await getClient();
+          const usersResponse = await client.get("users");
+          const users = usersResponse.data;
+
+          // Fetch roles for each user
+          const rolePromises = users.map(async (user) => {
+            if (user.app_metadata && !isEmpty(user.app_metadata.roles)) {
+              return user;
+            }
+
+            const userId = user.user_id;
+            const rolesResponse = await client.get(`users/${userId}/roles`);
+
+            user.app_metadata = user.app_metadata || {};
+            user.app_metadata.roles = rolesResponse.data.reduce((acc, role) => {
+              acc.push(role.name);
+              return acc;
+            }, []);
+            return user;
+          });
+          await Promise.all(rolePromises);
+          //console.log(users, "users\n\n");
+
+          res.status(200).json(users || {});
+        } catch (error) {
+          const { data } = error.response;
+          res
+            .status(data.statusCode || 500)
+            .send(data.message || "Error fetching all users.");
+        }
+
+        break;
     }
   } else if (req.method === "POST") {
     const { action, userId, role } = req.body;

@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
+import { navigate } from "gatsby";
 import { StaticImage } from "gatsby-plugin-image";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Box, Flex, Container, Text, Wrap, useTheme } from "@chakra-ui/react";
@@ -7,11 +8,10 @@ import { setCookie } from "../../cookie-manager";
 import CustomSpinner from "../spinner";
 import { ellipse, h1, overlapGroup } from "./select-option.module.css";
 
-const SelectOptionPage = (props) => {
+const SelectOptionPage = ({ onClose }) => {
   const theme = useTheme();
   const { isAuthenticated, user } = useAuth0();
   const [isLoading, setIsLoading] = useState(false);
-  const { setRole, onClose } = props;
 
   const handleRoleSelection = async (role) => {
     setIsLoading(true);
@@ -22,11 +22,13 @@ const SelectOptionPage = (props) => {
         userId: user.sub,
         role,
       });
-      setRole(role);
-      setCookie(`role|${user.email}`, role, 1);
+      setCookie(`role|${user.email}`, JSON.stringify([role]), 1);
     }
 
     setIsLoading(false);
+    if (role === "breeder") {
+      navigate("/breeder-profile");
+    }
     onClose();
   };
 

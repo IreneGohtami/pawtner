@@ -6,7 +6,6 @@ import {
   uploadBytes,
 } from "firebase/storage";
 import { Field, Form, Formik } from "formik";
-import { navigate } from "gatsby";
 import countries from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
 import { isEmpty } from "lodash";
@@ -40,13 +39,12 @@ import {
   Spacer,
   VStack,
   useDisclosure,
-  useToast,
 } from "@chakra-ui/react";
 
-import { getCookie } from "../../cookie-manager";
 import Header from "../../components/header";
 import Seo from "../../components/seo";
 import CustomSpinner from "../../components/spinner";
+import Toast from "../../components/toast";
 import { db, storage } from "../../firebase";
 import theme from "../../theme";
 
@@ -66,7 +64,9 @@ import {
 } from "./breeder-profile.module.css";
 
 const BreederProfile = () => {
-  const { isAuthenticated, isLoading, user } = useAuth0();
+  const { isLoading, user } = useAuth0();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const fileInputRef = useRef(null);
 
   const defaultMetadata = {
     first_name: "",
@@ -84,7 +84,6 @@ const BreederProfile = () => {
     followers: 0,
   };
 
-  const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
   const [originalMetadata, setOriginalMetadata] = useState(defaultMetadata); // from API
   const [userMetadata, setUserMetadata] = useState(defaultMetadata);
@@ -97,82 +96,37 @@ const BreederProfile = () => {
   const [modalAction, setModalAction] = useState("add");
   const [modalData, setModalData] = useState({});
 
-  const fileInputRef = useRef(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
-
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
-      if (!roles.length) {
-        // Try to check cookie
-        roles[0] = getCookie(`role|${user.email}`) || "";
+    const names = user.name.split(" ");
+    const firstName = names.slice(0, -1).join(" ");
+    const lastName = names.length > 1 ? names[names.length - 1] : "";
+
+    async function fetchUserMetadata() {
+      try {
+        const { data } = await axios.get(
+          `/api/auth0?action=get_user_metadata&userId=${user.sub}`
+        );
+        setUserMetadata(
+          !isEmpty(data.user_metadata)
+            ? { ...data.user_metadata, password: "", retype_password: "" }
+            : {
+                ...defaultMetadata,
+                first_name: firstName,
+                last_name: lastName,
+                email: user.email,
+                profile_picture: user.picture || "",
+              }
+        );
+        setOriginalMetadata(userMetadata);
+        setConnection(data.identities[0].connection);
+        setErrorAlert(null);
+      } catch (error) {
+        setErrorAlert(error?.response?.data || error.message);
       }
-      console.log(user, roles, "user");
-      setRole(roles[0] || "");
-
-      if (roles[0] !== "breeder") {
-        navigate("/");
-        return;
-      }
-
-      const names = user.name.split(" ");
-      const firstName = names.slice(0, -1).join(" ");
-      const lastName = names.length > 1 ? names[names.length - 1] : "";
-
-      async function fetchUserMetadata() {
-        try {
-          const { data } = await axios.get(
-            `/api/auth0?action=get_user_metadata&userId=${user.sub}`
-          );
-          setUserMetadata(
-            !isEmpty(data.user_metadata)
-              ? { ...data.user_metadata, password: "", retype_password: "" }
-              : {
-                  ...defaultMetadata,
-                  first_name: firstName,
-                  last_name: lastName,
-                  email: user.email,
-                  profile_picture: user.picture || "",
-                }
-          );
-          setOriginalMetadata(userMetadata);
-          setConnection(data.identities[0].connection);
-          setErrorAlert(null);
-        } catch (error) {
-          setErrorAlert(error?.response?.data || error.message);
-        }
-        setIsFormLoading(false);
-      }
-      fetchUserMetadata();
+      setIsFormLoading(false);
     }
-  }, [isAuthenticated, user]);
-
-  useEffect(() => {
-    if (successAlert) {
-      toast({
-        description: successAlert,
-        status: "success",
-        duration: 8000,
-        isClosable: true,
-        position: "top-right",
-      });
-      setSuccessAlert(null);
-    }
-  }, [successAlert]);
-
-  useEffect(() => {
-    if (errorAlert) {
-      toast({
-        description: errorAlert,
-        status: "error",
-        duration: 8000,
-        isClosable: true,
-        position: "top-right",
-      });
-      setErrorAlert(null);
-    }
-  }, [errorAlert]);
+    fetchUserMetadata();
+  }, []);
 
   const renderSectionTitle = (title) => {
     return isLoading ? (
@@ -237,6 +191,7 @@ const BreederProfile = () => {
       });
       setOriginalMetadata(userMetadata);
       setErrorAlert(null);
+      setSuccessAlert("Profile updated successfully.");
     } catch (e) {
       setErrorAlert(e?.response?.data || e.message);
     }
@@ -343,17 +298,22 @@ const BreederProfile = () => {
   });
 
   return (
-    !isFormLoading && (
-      <ChakraProvider theme={theme}>
-        <Box
-          w="100%"
-          px="1.5rem"
-          pb="5rem"
-          bg="#F2F2F2"
-          fontFamily="Poppins !important"
-        >
-          <Header isAuthenticated={isAuthenticated} user={user} role={role} />
-
+    <ChakraProvider theme={theme}>
+      <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />
+      <Toast
+        description={successAlert}
+        status="success"
+        setAlert={setSuccessAlert}
+      />
+      <Box
+        w="100%"
+        px="1.5rem"
+        pb="5rem"
+        bg="#F2F2F2"
+        fontFamily="Poppins !important"
+      >
+        <Header authorizedRole="breeder" />
+        {!isFormLoading && (
           <Accordion defaultIndex={[0, 1]} allowMultiple>
             <AccordionItem>
               <AccordionButton>
@@ -704,9 +664,9 @@ const BreederProfile = () => {
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
-        </Box>
-      </ChakraProvider>
-    )
+        )}
+      </Box>
+    </ChakraProvider>
   );
 };
 
