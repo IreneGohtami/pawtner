@@ -9,6 +9,8 @@ import {
   ChakraProvider,
   Box,
   Button,
+  Divider,
+  Flex,
   Link,
   Modal,
   ModalOverlay,
@@ -17,6 +19,7 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  SimpleGrid,
   Table,
   Thead,
   Tbody,
@@ -31,6 +34,7 @@ import {
 
 import theme from "../../theme";
 import Header from "../../components/header";
+import Seo from "../../components/seo";
 import CustomSpinner from "../../components/spinner";
 import Toast from "../../components/toast";
 import { tableRow } from "./admin.module.css";
@@ -43,6 +47,7 @@ const AdminPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
   const [profile, setProfile] = useState({});
+  const [roles, setRoles] = useState([]);
   const [puppyList, setPuppyList] = useState([]);
   const [isLoadingViewProfile, setIsLoadingViewProfile] = useState(false);
 
@@ -62,11 +67,12 @@ const AdminPage = () => {
     fetchAllUsers();
   }, [successAlert]);
 
-  const viewProfile = async (user) => {
+  const viewProfile = async (user, _roles) => {
     onOpen();
     setIsLoadingViewProfile(true);
     await fetchPuppyList(user.user_id);
     setProfile(user);
+    setRoles(_roles);
     setIsLoadingViewProfile(false);
   };
 
@@ -120,6 +126,59 @@ const AdminPage = () => {
     setPuppyList([]);
   };
 
+  const renderUserField = (key) => {
+    const value = profile.user_metadata[key];
+    const label = key.replace("_", " ");
+    return (
+      <Flex>
+        <Text key={key} w="20% !important">
+          {label.charAt(0).toUpperCase() + label.slice(1)}
+        </Text>
+        <Text whiteSpace="pre-wrap" w="80% !important">
+          {key === "profile_picture" ? (
+            <a href={value} target="_blank" style={{ color: "blue" }}>
+              Link
+            </a>
+          ) : key === "breeder_verified" ? (
+            value ? (
+              "Yes"
+            ) : (
+              "No"
+            )
+          ) : (
+            value
+          )}
+        </Text>
+      </Flex>
+    );
+  };
+
+  const renderPuppyList = () => {
+    return (
+      <SimpleGrid columns={3} spacing={10}>
+        {puppyList.map((puppy) => (
+          <Box key={puppy.id}>
+            <img
+              src={puppy.picture?.url || "/default-puppy-img.jpg"}
+              alt={puppy.name}
+              style={{
+                width: "100%",
+                maxHeight: "185px",
+                objectFit: "contain",
+              }}
+            />
+            <Text fontWeight={600} mt={2}>
+              {puppy.name} - {puppy.breed}
+            </Text>
+            <Text>
+              ${puppy.price}, {puppy.gender}, {puppy.color}
+            </Text>
+          </Box>
+        ))}
+      </SimpleGrid>
+    );
+  };
+
   return (
     <ChakraProvider theme={theme}>
       <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />
@@ -152,6 +211,7 @@ const AdminPage = () => {
                   <Th>Name</Th>
                   <Th>Email</Th>
                   <Th>Role</Th>
+                  <Th>Email Verified</Th>
                   <Th>Breeder Verified</Th>
                   <Th>Actions</Th>
                 </Tr>
@@ -176,6 +236,19 @@ const AdminPage = () => {
                       <Td>{user.email}</Td>
                       <Td>{roles.length ? roles.join(", ") : "-"}</Td>
                       <Td>
+                        {user.email_verified ? (
+                          <CheckCircleTwoTone
+                            style={{ fontSize: "20px" }}
+                            twoToneColor="#52c41a"
+                          />
+                        ) : (
+                          <CloseCircleTwoTone
+                            style={{ fontSize: "20px" }}
+                            twoToneColor="#ff4d4d"
+                          />
+                        )}
+                      </Td>
+                      <Td>
                         {roles.includes("breeder") ? (
                           user.user_metadata?.breeder_verified ? (
                             <CheckCircleTwoTone
@@ -196,7 +269,7 @@ const AdminPage = () => {
                         <Link
                           mr={3}
                           onClick={() => {
-                            viewProfile(user);
+                            viewProfile(user, roles);
                           }}
                         >
                           view
@@ -219,58 +292,47 @@ const AdminPage = () => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Breeder Profile</ModalHeader>
+          <ModalHeader>Profile</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody px="3rem">
             {isLoadingViewProfile ? (
               <CustomSpinner />
             ) : (
               <>
                 <Text fontWeight={600}>User Data</Text>
-                <pre style={{ whiteSpace: "pre-wrap" }}>
-                  {!isEmpty(profile.user_metadata) ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: JSON.stringify(
-                          profile.user_metadata,
-                          null,
-                          3
-                        ).replace(
-                          /("profile_picture": ")([^"]+)(")/g,
-                          (match, p1, pictureUrl, p3) =>
-                            `${p1}${
-                              pictureUrl
-                                ? `<a href="${pictureUrl}" style="color: blue" target="_blank">${pictureUrl}</a>`
-                                : ""
-                            }${p3}`
-                        ),
-                      }}
-                    />
-                  ) : (
-                    "Profile is not set."
+                <Divider my={2} />
+                {!isEmpty(profile.user_metadata) &&
+                  profile.user_metadata.first_name && (
+                    <>
+                      {renderUserField("first_name")}
+                      {renderUserField("last_name")}
+                      {renderUserField("email")}
+                      {renderUserField("phone")}
+                      {renderUserField("profile_picture")}
+                      {renderUserField("address")}
+                      {renderUserField("city")}
+                      {renderUserField("country")}
+                      {renderUserField("about_me")}
+                      {renderUserField("breeder_verified")}
+                      {renderUserField("followers")}
+                      {renderUserField("following")}
+                    </>
                   )}
-                </pre>
-                <br />
-                <Text fontWeight={600}>Puppy List</Text>
-                <pre style={{ whiteSpace: "pre-wrap" }}>
-                  {puppyList.length && !isLoadingViewProfile ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: JSON.stringify(puppyList, null, 3).replace(
-                          /("url": ")([^"]+)(")/g,
-                          (match, p1, pictureUrl, p3) =>
-                            `${p1}${
-                              pictureUrl
-                                ? `<a href="${pictureUrl}" style="color: blue" target="_blank">${pictureUrl}</a>`
-                                : ""
-                            }${p3}`
-                        ),
-                      }}
-                    />
-                  ) : (
-                    "No puppy listed."
-                  )}
-                </pre>
+                {isEmpty(profile.user_metadata) && "Profile is not set."}
+
+                {roles.includes("breeder") && (
+                  <>
+                    <Text fontWeight={600} mt={5}>
+                      Puppy List
+                    </Text>
+                    <Divider my={2} />
+                    {puppyList.length && !isLoadingViewProfile ? (
+                      renderPuppyList()
+                    ) : (
+                      <Text>No puppy listed.</Text>
+                    )}
+                  </>
+                )}
               </>
             )}
           </ModalBody>
@@ -302,5 +364,7 @@ const AdminPage = () => {
     </ChakraProvider>
   );
 };
+
+export const Head = () => <Seo title="Admin" />;
 
 export default withAuthenticationRequired(AdminPage);

@@ -8,6 +8,13 @@ module.exports = {
   },
   plugins: [
     "@chakra-ui/gatsby-plugin",
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `images`,
+        path: `${__dirname}/src/images`,
+      },
+    },
     "gatsby-plugin-image",
     "gatsby-plugin-sharp",
     "gatsby-transformer-sharp",
@@ -52,8 +59,23 @@ module.exports = {
         icon: "src/images/icon.png",
       },
     },
+    {
+      resolve: `gatsby-source-firestore-easy`,
+      options: {
+        adminCredential: {
+          credential: process.env.FIREBASE_CREDENTIALS,
+          databaseURL: process.env.FIREBASE_DATABASE_URL,
+        },
+        collections: [
+          {
+            collection: "puppy",
+            type: "Puppy",
+          },
+        ],
+      },
+    },
   ],
-  flags: {
+  /*flags: {
     DEV_SSR: true,
-  },
+  },*/
 };

@@ -37,7 +37,6 @@ import { getCookie, setCookie } from "../../cookie-manager";
 import CustomSpinner from "../../components/spinner";
 import CameraIcon from "../../images/icons/camera.inline.svg";
 
-import "react-datepicker/dist/react-datepicker.css";
 import {
   cancelButton,
   datePicker,
@@ -45,6 +44,7 @@ import {
   puppyFormInput,
   textarea,
 } from "./breeder-profile.module.css";
+import "react-datepicker/dist/react-datepicker.css";
 
 const UploadPuppyPage = ({
   userId,

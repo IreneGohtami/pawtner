@@ -1,11 +1,14 @@
 import React from "react";
+import { navigate } from "gatsby";
 import { StaticImage } from "gatsby-plugin-image";
 import {
+  Button,
   Center,
   Grid,
   GridItem,
   HStack,
   Icon,
+  Image,
   Input,
   InputGroup,
   InputLeftAddon,
@@ -13,20 +16,72 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
+  SimpleGrid,
   Square,
   Text,
   useDisclosure,
+  VStack,
 } from "@chakra-ui/react";
+
 import Seo from "../../components/seo";
 import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
 import Header from "../../components/header";
 import SelectOptionPage from "../../components/select-option";
+import theme from "../../theme";
 
 //import { searchBox, icon } from "./home.module.css";
 
-const HomePage = () => {
+const HomePage = ({ puppyList }) => {
+  console.log(puppyList, "puppyList!");
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const renderPuppy = (puppy) => {
+    return (
+      <VStack key={puppy.id} spacing={4}>
+        <Image
+          w={[150, 200, 250, 300]}
+          h={[150, 200, 250, 300]}
+          objectFit="cover"
+          borderRadius="20px"
+          border={puppy.picture?.url ? 0 : "2px solid #E2E8F0"}
+          padding={puppy.picture?.url ? 0 : "15px"}
+          src={puppy.picture?.url || "/default-puppy-img.jpg"}
+          alt={`${puppy.name} - ${puppy.breed}`}
+        />
+        <Button
+          bg={theme.colors.primary}
+          borderRadius={15}
+          w="70%"
+          h="60px"
+          fontSize={18}
+          fontWeight={600}
+          colorScheme="yellow"
+          onClick={() => viewPuppy(puppy.id)}
+        >
+          Apply for Puppy
+        </Button>
+      </VStack>
+    );
+  };
+
+  const renderPuppyThumbnail = (puppy) => {
+    return (
+      <Image
+        key={puppy.id}
+        w={[30, 80, 125]}
+        h={[30, 80, 125]}
+        objectFit="cover"
+        borderRadius="10px"
+        src={puppy.picture?.url || "/default-puppy-img.jpg"}
+        alt={`${puppy.name} - ${puppy.breed}`}
+      />
+    );
+  };
+
+  const viewPuppy = (id) => {
+    navigate(`/puppy/${id}`);
+  };
 
   return (
     <>
@@ -100,12 +155,49 @@ const HomePage = () => {
             </HStack>
           </Center>
         </GridItem>
-        <GridItem area="main">
-          <Center h={150}>
-            <Text fontSize="40px" fontWeight={700}>
+        <GridItem area="main" mb="80px">
+          <VStack>
+            <Text fontSize="40px" fontWeight={700} my={8}>
               Pet Available For Adoption
             </Text>
-          </Center>
+          </VStack>
+          <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={4}>
+            {puppyList.map(
+              (puppy, index) =>
+                (index < 3 || puppyList.length <= 4) && renderPuppy(puppy)
+            )}
+
+            {puppyList.length > 4 && (
+              <VStack>
+                <Square
+                  borderRadius="20px"
+                  bg="#F1F1F1"
+                  p="20px"
+                  w={[150, 200, 250, 300]}
+                  h={[150, 200, 250, 300]}
+                >
+                  <SimpleGrid columns={2} spacing={4}>
+                    {puppyList.map(
+                      (puppy, index) =>
+                        index > 2 && index < 7 && renderPuppyThumbnail(puppy)
+                    )}
+                  </SimpleGrid>
+                </Square>
+                <Button
+                  bg={theme.colors.primary}
+                  borderRadius={15}
+                  w="70%"
+                  h="60px"
+                  fontSize={25}
+                  fontWeight={700}
+                  colorScheme="yellow"
+                  //onClick={viewMorePuppy}
+                >
+                  More
+                </Button>
+              </VStack>
+            )}
+          </SimpleGrid>
         </GridItem>
       </Grid>
     </>

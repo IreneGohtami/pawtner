@@ -79,7 +79,7 @@ const ListPuppyTable = ({
         querySnapshot.forEach((doc) => {
           data.push({ ...doc.data(), id: doc.id });
         });
-
+        console.log(data);
         setPuppyList(data);
       } catch (e) {
         setErrorAlert("Failed to fetch puppy list. Please try again.");
