@@ -1,4 +1,4 @@
-import React from "react";
+import React /*, { useEffect, useState }*/ from "react";
 import { navigate } from "gatsby";
 import { StaticImage } from "gatsby-plugin-image";
 import {
@@ -22,8 +22,9 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
+//import { query, collection, getDocs, where, orderBy } from "firebase/firestore";
+//import { db } from "../../firebase";
 
-import Seo from "../../components/seo";
 import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
 import Header from "../../components/header";
@@ -32,9 +33,35 @@ import theme from "../../theme";
 
 //import { searchBox, icon } from "./home.module.css";
 
-const HomePage = ({ puppyList }) => {
-  console.log(puppyList, "puppyList!");
+const HomePage = ({ puppyList = [] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  //const [puppyList, setPuppyList] = useState([]);
+  //const [isLoading, setIsLoading] = useState(true);
+
+  /*useEffect(() => {
+    async function listPuppy() {
+      setIsLoading(true);
+      try {
+        // Fetch all available puppies
+        const q = query(
+          collection(db, "puppy"),
+          where("status", "==", "available"),
+          orderBy("created_at", "asc")
+        );
+        const querySnapshot = await getDocs(q);
+
+        const data = [];
+        querySnapshot.forEach((doc) => {
+          data.push({ ...doc.data(), id: doc.id });
+        });
+        setPuppyList(data);
+      } catch (e) {
+        console.log(e, "Failed to fetch puppy list");
+      }
+      setIsLoading(false);
+    }
+    listPuppy();
+  }, []);*/
 
   const renderPuppy = (puppy) => {
     return (
@@ -107,52 +134,67 @@ const HomePage = ({ puppyList }) => {
           />
         </GridItem>
         <GridItem area="hero">
-          <Center h={[100, 120, 150, 230]}>
-            <HStack spacing="0px">
-              <InputGroup>
-                <InputLeftAddon
-                  bg="white"
-                  borderRadius="23px 0 0 23px"
-                  children={
-                    <Square
-                      size={[30, 38, 50, 90]}
-                      bg="gray.200"
-                      borderRadius="9px"
-                    >
+          <Center pt="3%">
+            <VStack>
+              <HStack spacing="0px">
+                <InputGroup>
+                  <InputLeftAddon
+                    bg="white"
+                    borderRadius="23px 0 0 23px"
+                    children={
+                      <Square
+                        size={[30, 38, 50, 90]}
+                        bg="gray.200"
+                        borderRadius="9px"
+                      >
+                        <Icon
+                          as={FilterIcon}
+                          w={[18, 22, 27, 45]}
+                          h={[18, 22, 27, 45]}
+                        />
+                      </Square>
+                    }
+                    h={[39, 50, 70, 120]}
+                  />
+                  <Input
+                    placeholder="Search something here..."
+                    size="lg"
+                    bg="white"
+                    focusBorderColor="transparent"
+                    border={0}
+                    h={[39, 50, 70, 120]}
+                    w={[250, 350, 600, 750, 900, 1050]}
+                    fontSize={[16, 20, 26, 33]}
+                  />
+                  <InputRightAddon
+                    bg="white"
+                    borderRadius="0 23px 23px 0"
+                    children={
                       <Icon
-                        as={FilterIcon}
+                        as={SearchIcon}
                         w={[18, 22, 27, 45]}
                         h={[18, 22, 27, 45]}
                       />
-                    </Square>
-                  }
-                  h={[39, 50, 70, 120]}
-                />
-                <Input
-                  placeholder="Search something here..."
-                  size="lg"
-                  bg="white"
-                  focusBorderColor="transparent"
-                  border={0}
-                  h={[39, 50, 70, 120]}
-                  w={[250, 350, 600, 750, 900, 1050]}
-                  fontSize={[16, 20, 26, 33]}
-                />
-                <InputRightAddon
-                  bg="white"
-                  borderRadius="0 23px 23px 0"
-                  children={
-                    <Icon
-                      as={SearchIcon}
-                      w={[18, 22, 27, 45]}
-                      h={[18, 22, 27, 45]}
-                    />
-                  }
-                  h={[39, 50, 70, 120]}
-                  pr={8}
-                />
-              </InputGroup>
-            </HStack>
+                    }
+                    h={[39, 50, 70, 120]}
+                    pr={8}
+                  />
+                </InputGroup>
+              </HStack>
+              <Text
+                pt={5}
+                fontWeight={700}
+                fontSize={38}
+                zIndex={2}
+                color="white"
+              >
+                Find your new best friend
+              </Text>
+              <Text fontSize={16} zIndex={2} color="white">
+                Browse pets from our network of over 11,500 shelters and
+                rescues.
+              </Text>
+            </VStack>
           </Center>
         </GridItem>
         <GridItem area="main" mb="80px">
@@ -160,6 +202,7 @@ const HomePage = ({ puppyList }) => {
             <Text fontSize="40px" fontWeight={700} my={8}>
               Pet Available For Adoption
             </Text>
+            {/*isLoading && <Text>Loading...</Text>*/}
           </VStack>
           <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={4}>
             {puppyList.map(
@@ -203,7 +246,5 @@ const HomePage = ({ puppyList }) => {
     </>
   );
 };
-
-export const Head = () => <Seo title="Home" />;
 
 export default HomePage;

@@ -2,6 +2,7 @@ import { graphql } from "gatsby";
 import React from "react";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "../theme";
+import Seo from "../components/seo";
 import HomePage from "./home";
 
 const IndexPage = ({ data }) => {
@@ -26,5 +27,7 @@ export const query = graphql`
     }
   }
 `;
+
+export const Head = () => <Seo title="Home" />;
 
 export default IndexPage;

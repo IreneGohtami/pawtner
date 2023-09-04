@@ -1,6 +1,7 @@
 require("dotenv").config({
   path: `.env.${process.env.NODE_ENV}`,
 });
+const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
 module.exports = {
   siteMetadata: {
@@ -63,7 +64,7 @@ module.exports = {
       resolve: `gatsby-source-firestore-easy`,
       options: {
         adminCredential: {
-          credential: process.env.FIREBASE_CREDENTIALS,
+          credential: firebaseCredentials,
           databaseURL: process.env.FIREBASE_DATABASE_URL,
         },
         collections: [
@@ -75,7 +76,7 @@ module.exports = {
       },
     },
   ],
-  /*flags: {
+  flags: {
     DEV_SSR: true,
-  },*/
+  },
 };
