@@ -35,10 +35,10 @@ import theme from "../../theme";
 
 const HomePage = ({ puppyList = [] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  //const [puppyList, setPuppyList] = useState([]);
-  //const [isLoading, setIsLoading] = useState(true);
+  /*const [puppyList, setPuppyList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  /*useEffect(() => {
+  useEffect(() => {
     async function listPuppy() {
       setIsLoading(true);
       try {
@@ -119,7 +119,7 @@ const HomePage = ({ puppyList = [] }) => {
         </ModalContent>
       </Modal>
       <Grid templateAreas={`"header" "hero" "main"`}>
-        <GridItem area="header" px="40px">
+        <GridItem area="header">
           <Header authorizedRole="all" openSelectOptionModal={onOpen} />
         </GridItem>
         <GridItem area="hero">

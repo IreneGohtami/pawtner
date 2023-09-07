@@ -305,6 +305,7 @@ const BreederProfile = () => {
         status="success"
         setAlert={setSuccessAlert}
       />
+      <Header authorizedRole="breeder" bg="#F2F2F2" />
       <Box
         w="100%"
         px="1.5rem"
@@ -312,7 +313,6 @@ const BreederProfile = () => {
         bg="#F2F2F2"
         fontFamily="Poppins !important"
       >
-        <Header authorizedRole="breeder" />
         {!isFormLoading && (
           <Accordion defaultIndex={[0, 1]} allowMultiple>
             <AccordionItem>

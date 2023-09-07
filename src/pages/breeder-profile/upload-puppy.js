@@ -71,7 +71,8 @@ const UploadPuppyPage = ({
     rehoming_date: "",
     about_puppy: "",
     picture: null,
-    status: "available", // adopted, unlisted
+    size: "",
+    status: "Available",
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -84,6 +85,8 @@ const UploadPuppyPage = ({
   const [onPictureHover, setOnPictureHover] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const colors = ["Brown", "Black", "White", "Gray", "Others"];
+  const statuses = ["Available", "Adopted", "Unlisted"];
+  const sizes = ["Small", "Medium", "Large"];
 
   useEffect(() => {
     async function listDogBreed() {
@@ -166,25 +169,32 @@ const UploadPuppyPage = ({
     let puppyPictureUrl = "";
     let isPictureChanged = false;
 
-    if (form.picture && imageUrl) {
-      isPictureChanged = true;
-      puppyImageRefId = puppyData.picture?.reference || puppyImageRefId;
-      try {
-        // Upload picture to firebase storage
-        const storageRef = ref(
-          storage,
-          `users/${userId}/puppies/${puppyImageRefId}.png`
-        );
+    if (form.picture && imageUrl /*&& imageUrl !== form.picture*/) {
+      if (action === "edit" && puppyData.picture?.url === imageUrl) {
+        // skip uploading picture if picture is not changed
+      } else {
+        isPictureChanged = true;
+      }
 
-        const snapshot = await uploadBytes(storageRef, form.picture);
-        puppyPictureUrl = await getDownloadURL(snapshot.ref);
-        setForm({ ...form, picture: puppyPictureUrl });
-      } catch (error) {
-        setUploadError("Error uploading puppy image. Please try again.");
-        setIsSubmitting(false);
-        setForm({ ...form, picture: null });
-        console.log("Error uploading puppy image:", error);
-        return;
+      puppyImageRefId = puppyData.picture?.reference || puppyImageRefId;
+      if (isPictureChanged) {
+        try {
+          // Upload picture to firebase storage
+          const storageRef = ref(
+            storage,
+            `users/${userId}/puppies/${puppyImageRefId}.png`
+          );
+
+          const snapshot = await uploadBytes(storageRef, form.picture);
+          puppyPictureUrl = await getDownloadURL(snapshot.ref);
+          setForm({ ...form, picture: puppyPictureUrl });
+        } catch (error) {
+          setUploadError("Error uploading puppy image. Please try again.");
+          setIsSubmitting(false);
+          setForm({ ...form, picture: null });
+          console.log("Error uploading puppy image:", error);
+          return;
+        }
       }
     }
 
@@ -226,7 +236,9 @@ const UploadPuppyPage = ({
     }
 
     setSuccessAlert(
-      `Puppy ${action === "edit" ? "updated" : "uploaded"} successfully!`
+      `Puppy ${
+        action === "edit" ? "updated" : "uploaded"
+      } successfully! Changes will take up to 30 minutes to reflect.`
     );
     setIsSubmitting(false);
     closeModal();
@@ -258,7 +270,9 @@ const UploadPuppyPage = ({
       !form.breed ||
       !form.gender ||
       !form.color ||
-      !form.price
+      !form.price ||
+      !form.size ||
+      !form.status
     ) {
       return false;
     }
@@ -389,15 +403,19 @@ const UploadPuppyPage = ({
                   )}
                 </Circle>
               </FormControl>
-              <FormControl mb={5} isInvalid={isValidating && !form.name}>
-                <Input ref={initialRef} {...inputProperties("name", "text")} />
-                {renderErrorMessage()}
-              </FormControl>
+              <HStack mb={5}>
+                <FormControl isInvalid={isValidating && !form.name}>
+                  <Input
+                    ref={initialRef}
+                    {...inputProperties("name", "text")}
+                  />
+                  {renderErrorMessage()}
+                </FormControl>
+              </HStack>
               <HStack mb={5}>
                 <FormControl isInvalid={isValidating && !form.breed}>
                   {action === "view" ? (
                     <Input
-                      ref={initialRef}
                       {...inputProperties("breed", "text")}
                       value={
                         form.breed.charAt(0).toUpperCase() + form.breed.slice(1)
@@ -416,10 +434,7 @@ const UploadPuppyPage = ({
                 </FormControl>
                 <FormControl isInvalid={isValidating && !form.gender}>
                   {action === "view" ? (
-                    <Input
-                      ref={initialRef}
-                      {...inputProperties("gender", "text")}
-                    />
+                    <Input {...inputProperties("gender", "text")} />
                   ) : (
                     <Select {...inputProperties("gender")}>
                       <option key="male" value="Male">
@@ -439,10 +454,7 @@ const UploadPuppyPage = ({
                 </FormControl>
                 <FormControl isInvalid={isValidating && !form.color}>
                   {action === "view" ? (
-                    <Input
-                      ref={initialRef}
-                      {...inputProperties("color", "text")}
-                    />
+                    <Input {...inputProperties("color", "text")} />
                   ) : (
                     <Select {...inputProperties("color")}>
                       {colors.map((color) => (
@@ -483,7 +495,8 @@ const UploadPuppyPage = ({
                     dateFormat="dd/MM/yyyy"
                     className={`${puppyFormInput} ${datePicker}`}
                     selected={
-                      form.rehoming_date
+                      form.rehoming_date &&
+                      moment(form.rehoming_date, "DD/MM/YYYY", true).isValid()
                         ? moment(form.rehoming_date, "DD/MM/YYYY").toDate()
                         : ""
                     }
@@ -495,6 +508,35 @@ const UploadPuppyPage = ({
                     }}
                     readOnly={action === "view"}
                   />
+                </FormControl>
+              </HStack>
+              <HStack>
+                <FormControl isInvalid={isValidating && !form.size}>
+                  {action === "view" ? (
+                    <Input {...inputProperties("size", "text")} />
+                  ) : (
+                    <Select {...inputProperties("size")}>
+                      {sizes.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                  {renderErrorMessage()}
+                </FormControl>
+                <FormControl>
+                  {action === "view" ? (
+                    <Input {...inputProperties("status", "text")} />
+                  ) : (
+                    <Select {...inputProperties("status")}>
+                      {statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
                 </FormControl>
               </HStack>
             </Box>

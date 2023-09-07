@@ -1,0 +1,17 @@
+.label {
+  color: #667085;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: "Plus Jakarta Sans";
+}
+.label-text {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: "Plus Jakarta Sans";
+}
+
+.button {
+  height: 60px !important;
+  border-radius: 14px !important;
+  margin-bottom: 15px;
+}

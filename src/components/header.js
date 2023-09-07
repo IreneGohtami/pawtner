@@ -23,7 +23,7 @@ import ArrowUpIcon from "../images/icons/arrow-up.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
 import MenuIcon from "../images/icons/menu.inline.svg";
 
-const Header = ({ authorizedRole, openSelectOptionModal }) => {
+const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
   const location = useLocation();
   const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
   const [role, setRole] = useState([]);
@@ -55,7 +55,7 @@ const Header = ({ authorizedRole, openSelectOptionModal }) => {
   }, [user]);
 
   return (
-    <Flex>
+    <Flex bg={bg || "none"} px="40px">
       <Center h={headerHeights}>
         <PawtnerLogo
           width="183px"

@@ -15,7 +15,10 @@ const IndexPage = ({ data }) => {
 
 export const query = graphql`
   query {
-    allPuppy(sort: { created_at: ASC }) {
+    allPuppy(
+      sort: { fields: created_at, order: ASC }
+      filter: { status: { eq: "Available" } }
+    ) {
       nodes {
         id
         name

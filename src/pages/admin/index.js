@@ -187,6 +187,7 @@ const AdminPage = () => {
         status="success"
         setAlert={setSuccessAlert}
       />
+      <Header authorizedRole="admin" bg="#F2F2F2" />
       <Box
         w="100%"
         h="100vh"
@@ -194,8 +195,6 @@ const AdminPage = () => {
         bg="#F2F2F2"
         fontFamily="Poppins !important"
       >
-        <Header authorizedRole="admin" />
-
         <Text fontSize={28} fontWeight={600} p="15px">
           Admin Panel
         </Text>
