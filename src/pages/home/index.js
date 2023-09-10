@@ -1,4 +1,4 @@
-import React /*, { useEffect, useState }*/ from "react";
+import React, { useEffect, useState } from "react";
 import { navigate } from "gatsby";
 import { StaticImage } from "gatsby-plugin-image";
 import {
@@ -29,12 +29,14 @@ import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
 import Header from "../../components/header";
 import SelectOptionPage from "../../components/select-option";
+import { getCookie, setCookie } from "../../cookie-manager";
 import theme from "../../theme";
 
 //import { searchBox, icon } from "./home.module.css";
 
 const HomePage = ({ puppyList = [] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [showAllPuppy, setShowAllPuppy] = useState(false);
   /*const [puppyList, setPuppyList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -75,6 +77,8 @@ const HomePage = ({ puppyList = [] }) => {
           padding={puppy.picture?.url ? 0 : "15px"}
           src={puppy.picture?.url || "/default-puppy-img.jpg"}
           alt={`${puppy.name} - ${puppy.breed}`}
+          cursor="pointer"
+          onClick={() => navigate(`/puppy/${puppy.id}`)}
         />
         <Button
           bg={theme.colors.primary}
@@ -84,7 +88,7 @@ const HomePage = ({ puppyList = [] }) => {
           fontSize={18}
           fontWeight={600}
           colorScheme="yellow"
-          onClick={() => viewPuppy(puppy.id)}
+          onClick={() => navigate(`/puppy/${puppy.id}`)}
         >
           Apply for Puppy
         </Button>
@@ -104,10 +108,6 @@ const HomePage = ({ puppyList = [] }) => {
         alt={`${puppy.name} - ${puppy.breed}`}
       />
     );
-  };
-
-  const viewPuppy = (id) => {
-    navigate(`/puppy/${id}`);
   };
 
   return (
@@ -205,12 +205,15 @@ const HomePage = ({ puppyList = [] }) => {
             {/*isLoading && <Text>Loading...</Text>*/}
           </VStack>
           <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={4}>
-            {puppyList.map(
-              (puppy, index) =>
-                (index < 3 || puppyList.length <= 4) && renderPuppy(puppy)
-            )}
+            {showAllPuppy && puppyList.map((puppy) => renderPuppy(puppy))}
 
-            {puppyList.length > 4 && (
+            {!showAllPuppy &&
+              puppyList.map(
+                (puppy, index) =>
+                  (index < 3 || puppyList.length <= 4) && renderPuppy(puppy)
+              )}
+
+            {!showAllPuppy && puppyList.length > 4 && (
               <VStack>
                 <Square
                   borderRadius="20px"
@@ -234,7 +237,7 @@ const HomePage = ({ puppyList = [] }) => {
                   fontSize={25}
                   fontWeight={700}
                   colorScheme="yellow"
-                  //onClick={viewMorePuppy}
+                  onClick={() => setShowAllPuppy(true)}
                 >
                   More
                 </Button>

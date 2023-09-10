@@ -238,7 +238,7 @@ const UploadPuppyPage = ({
     setSuccessAlert(
       `Puppy ${
         action === "edit" ? "updated" : "uploaded"
-      } successfully! Changes will take up to 30 minutes to reflect.`
+      } successfully! Changes can take up to 10 minutes to reflect.`
     );
     setIsSubmitting(false);
     closeModal();

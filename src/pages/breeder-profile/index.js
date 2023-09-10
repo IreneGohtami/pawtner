@@ -128,6 +128,13 @@ const BreederProfile = () => {
     fetchUserMetadata();
   }, []);
 
+  useEffect(() => {
+    if (successAlert) {
+      // Trigger a rebuild in gatsby via webhook
+      axios.post(process.env.GATSBY_BUILD_WEBHOOK);
+    }
+  }, [successAlert]);
+
   const renderSectionTitle = (title) => {
     return isLoading ? (
       <CustomSpinner height="100vh" />
