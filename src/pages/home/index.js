@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { navigate } from "gatsby";
 import { StaticImage } from "gatsby-plugin-image";
 import {
+  Box,
   Button,
   Center,
   Grid,
@@ -28,15 +29,14 @@ import {
 import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
 import Header from "../../components/header";
+import Footer from "../../components/footer";
 import SelectOptionPage from "../../components/select-option";
-import { getCookie, setCookie } from "../../cookie-manager";
 import theme from "../../theme";
 
-//import { searchBox, icon } from "./home.module.css";
+import { title, subtitle, infoBox, learnMoreBtn } from "./home.module.css";
 
 const HomePage = ({ puppyList = [] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [showAllPuppy, setShowAllPuppy] = useState(false);
   /*const [puppyList, setPuppyList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -197,23 +197,20 @@ const HomePage = ({ puppyList = [] }) => {
             </VStack>
           </Center>
         </GridItem>
-        <GridItem area="main" mb="80px">
+        <GridItem area="main">
           <VStack>
-            <Text fontSize="40px" fontWeight={700} my={8}>
+            <Text className={title} my={8}>
               Pet Available For Adoption
             </Text>
             {/*isLoading && <Text>Loading...</Text>*/}
           </VStack>
           <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={4}>
-            {showAllPuppy && puppyList.map((puppy) => renderPuppy(puppy))}
+            {puppyList.map(
+              (puppy, index) =>
+                (index < 3 || puppyList.length <= 4) && renderPuppy(puppy)
+            )}
 
-            {!showAllPuppy &&
-              puppyList.map(
-                (puppy, index) =>
-                  (index < 3 || puppyList.length <= 4) && renderPuppy(puppy)
-              )}
-
-            {!showAllPuppy && puppyList.length > 4 && (
+            {puppyList.length > 4 && (
               <VStack>
                 <Square
                   borderRadius="20px"
@@ -237,13 +234,51 @@ const HomePage = ({ puppyList = [] }) => {
                   fontSize={25}
                   fontWeight={700}
                   colorScheme="yellow"
-                  onClick={() => setShowAllPuppy(true)}
+                  onClick={() => navigate("/dogs")}
                 >
                   More
                 </Button>
               </VStack>
             )}
           </SimpleGrid>
+
+          <Box mt="40px" p="40px" pb="60px" bg="#F8FAFF">
+            <Text className={title}>Planning to Adopt a Pet?</Text>
+            <HStack spacing={4} mt="20px">
+              <Box className={infoBox}>
+                <Box h="160px">
+                  <Text className={subtitle}>Checklist for New Adopters</Text>
+                  <Text mt={4}>
+                    Help make the transition, smooth as possible.
+                  </Text>
+                </Box>
+                <Button className={learnMoreBtn}>Learn More</Button>
+              </Box>
+
+              <Box className={infoBox}>
+                <Box h="160px">
+                  <Text className={subtitle}>COVID-19 Resources</Text>
+                  <Text mt={4}>
+                    Get the latest on adoption processes, learn how local
+                    shelters and rescue groups are adapting.
+                  </Text>
+                </Box>
+                <Button className={learnMoreBtn}>Learn More</Button>
+              </Box>
+
+              <Box className={infoBox}>
+                <Box h="160px">
+                  <Text className={subtitle}>Pet Adoption FAQs</Text>
+                  <Text mt={4}>
+                    Get answers to question you haven't thought of.
+                  </Text>
+                </Box>
+                <Button className={learnMoreBtn}>Learn More</Button>
+              </Box>
+            </HStack>
+          </Box>
+
+          <Footer currentPage="home" />
         </GridItem>
       </Grid>
     </>

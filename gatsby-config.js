@@ -43,6 +43,16 @@ module.exports = {
             file: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;800&display=swap",
             weights: ["400", "500", "600", "800"],
           },
+          {
+            name: "Sniglet",
+            file: "https://fonts.googleapis.com/css2?family=Sniglet&display=swap",
+            weights: ["400"],
+          },
+          {
+            name: "Montserrat",
+            file: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap",
+            weights: ["400", "600", "700"],
+          },
         ],
       },
     },
