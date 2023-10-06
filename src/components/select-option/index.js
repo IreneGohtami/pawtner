@@ -27,7 +27,7 @@ const SelectOptionPage = ({ onClose }) => {
 
     setIsLoading(false);
     if (role === "breeder") {
-      navigate("/breeder-profile");
+      navigate("/account/breeder-profile");
     }
     onClose();
   };

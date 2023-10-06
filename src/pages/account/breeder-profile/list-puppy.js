@@ -37,7 +37,7 @@ import {
   EyeOutlined,
   PictureOutlined,
 } from "@ant-design/icons";
-import CustomSpinner from "../../components/spinner";
+import CustomSpinner from "../../../components/spinner";
 import { tableRow, actionIcon } from "./breeder-profile.module.css";
 
 const ListPuppyTable = ({

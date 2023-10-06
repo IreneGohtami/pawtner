@@ -12,7 +12,7 @@ export const setCookie = (key, value, expires = 1) => {
 export const setAccessTokenCookie = (key, value) => {
   //set expire after 10 min
   Cookies.set(key, value, {
-    path: "/breeder-profile",
+    path: "/account/breeder-profile",
     expires: moment().add(10, "minutes").toDate(),
   });
 };

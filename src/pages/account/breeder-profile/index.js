@@ -41,16 +41,16 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 
-import Header from "../../components/header";
-import Seo from "../../components/seo";
-import CustomSpinner from "../../components/spinner";
-import Toast from "../../components/toast";
-import { db, storage } from "../../firebase";
-import theme from "../../theme";
+import Header from "../../../components/header";
+import Seo from "../../../components/seo";
+import CustomSpinner from "../../../components/spinner";
+import Toast from "../../../components/toast";
+import { db, storage } from "../../../firebase";
+import theme from "../../../theme";
 
-import CameraIcon from "../../images/icons/camera.inline.svg";
-import EmailIcon from "../../images/icons/email.inline.svg";
-import TelephoneIcon from "../../images/icons/telephone.inline.svg";
+import CameraIcon from "../../../images/icons/camera.inline.svg";
+import EmailIcon from "../../../images/icons/email.inline.svg";
+import TelephoneIcon from "../../../images/icons/telephone.inline.svg";
 
 import ListPuppyTable from "./list-puppy";
 import UploadPuppyPage from "./upload-puppy";
@@ -131,7 +131,7 @@ const BreederProfile = () => {
   useEffect(() => {
     if (successAlert) {
       // Trigger a rebuild in gatsby via webhook
-      axios.post(process.env.GATSBY_BUILD_WEBHOOK);
+      axios.post(process.env.NETLIFY_BUILD_WEBHOOK);
     }
   }, [successAlert]);
 

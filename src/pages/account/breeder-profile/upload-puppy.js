@@ -33,9 +33,9 @@ import {
   useTheme,
 } from "@chakra-ui/react";
 
-import { getCookie, setCookie } from "../../cookie-manager";
-import CustomSpinner from "../../components/spinner";
-import CameraIcon from "../../images/icons/camera.inline.svg";
+import { getCookie, setCookie } from "../../../cookie-manager";
+import CustomSpinner from "../../../components/spinner";
+import CameraIcon from "../../../images/icons/camera.inline.svg";
 
 import {
   cancelButton,

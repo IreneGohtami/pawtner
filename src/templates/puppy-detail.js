@@ -143,18 +143,11 @@ const PuppyDetail = ({ data }) => {
             <Text className={label}>Availability</Text>
             <Text className={labelText}>{mapStatus(puppy.status)}</Text>
 
-            <Button
-              bg={theme.colors.primary}
-              color="white"
-              colorScheme="yellow"
-              size="md"
-              className={button}
-              mt={8}
-            >
-              Contact with Breeder
+            <Button className={button} mt={8}>
+              Contact Breeder
             </Button>
             <Button className={button} mt={8}>
-              Application Form
+              View Breeder's Profile
             </Button>
             <Button
               className={button}

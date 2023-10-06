@@ -29,7 +29,7 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
   const [role, setRole] = useState([]);
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
-  const isProfilePage = location.pathname === "/breeder-profile/";
+  const isProfilePage = location.pathname === "/account/breeder-profile/";
   const isAdminPage = location.pathname === "/admin/";
 
   useEffect(() => {
@@ -102,7 +102,11 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
                 )}
                 <Text mx="30px" fontWeight={isProfilePage ? 600 : 400}>
                   <Link
-                    href={role.includes("breeder") ? "/breeder-profile" : "/"}
+                    href={
+                      role.includes("breeder")
+                        ? "/account/breeder-profile"
+                        : "/"
+                    }
                   >
                     Account
                   </Link>
@@ -145,7 +149,7 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
                 <option
                   onClick={() => {
                     role.includes("breeder")
-                      ? navigate("/breeder-profile")
+                      ? navigate("/account/breeder-profile")
                       : navigate("/");
                   }}
                 >
