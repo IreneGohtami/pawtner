@@ -82,6 +82,10 @@ module.exports = {
             collection: "puppy",
             type: "Puppy",
           },
+          {
+            collection: "favorite",
+            type: "Favorite",
+          },
         ],
       },
     },

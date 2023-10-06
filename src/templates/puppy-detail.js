@@ -1,4 +1,6 @@
-import React /*, { useEffect, useState }*/ from "react";
+import React, { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { HeartFilled } from "@ant-design/icons";
 import {
   Box,
   Button,
@@ -9,44 +11,77 @@ import {
   useTheme,
 } from "@chakra-ui/react";
 import { graphql } from "gatsby";
-//import { collection, getDoc, query, where, orderBy } from "firebase/firestore";
-//import { db } from "../firebase";
+
+import {
+  collection,
+  doc,
+  addDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+import { db } from "../firebase";
 
 import Header from "../components/header";
+import Footer from "../components/footer";
 import Seo from "../components/seo";
+import Toast from "../components/toast";
 import { button, label, labelText } from "./puppy-detail.module.css";
 
 const PuppyDetail = ({ data }) => {
   const { puppy } = data;
   const theme = useTheme();
-  /*const { id } = pageContext;
-  const [puppy, setPuppy] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorAlert, setErrorAlert] = useState("");
+  const { isAuthenticated, user } = useAuth0();
+  const [isFavorite, setIsFavorite] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorAlert, setErrorAlert] = useState(null);
 
+  // Check for favorite
   useEffect(() => {
-    async function getPuppy() {
-      setIsLoading(true);
-      try {
-        const q = query(
-          collection(db, "puppy"),
-          //where("status", "==", "available"),
-          orderBy("created_at", "asc")
-        );
-        const querySnapshot = await getDoc(q);
-        if (querySnapshot.exists()) {
-          setPuppy(querySnapshot.data());
+    async function checkFavorite() {
+      if (isAuthenticated && user) {
+        try {
+          const q = query(
+            collection(db, "favorite"),
+            where("user_id", "==", user.sub),
+            where("animal_id", "==", puppy.id)
+          );
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const result = querySnapshot.docs[0];
+            setIsFavorite(result.id);
+          }
+        } catch (e) {
+          console.log(e, "error fetching favorites");
         }
-      } catch (e) {
-        setErrorAlert("Failed to fetch puppy info. Please try again.");
-        console.log(e, "Failed to fetch puppy info");
       }
-      setIsLoading(false);
     }
-    getPuppy();
-  }, []);*/
+    checkFavorite();
+  }, [isAuthenticated, user]);
 
-  //const { puppy } = data; // Access puppy data here
+  const addToFavorites = async () => {
+    if (isAuthenticated && user) {
+      setIsLoading(true);
+      const result = await addDoc(collection(db, "favorite"), {
+        user_id: user.sub,
+        animal_id: puppy.id,
+      });
+      setIsLoading(false);
+      setIsFavorite(result.id);
+    } else {
+      setErrorAlert("Please login first");
+    }
+  };
+
+  const removeFromFavorites = async () => {
+    if (isAuthenticated && user) {
+      setIsLoading(true);
+      await deleteDoc(doc(db, "favorite", isFavorite));
+      setIsLoading(false);
+      setIsFavorite("");
+    }
+  };
 
   const mapStatus = (status) => {
     switch (status) {
@@ -58,17 +93,17 @@ const PuppyDetail = ({ data }) => {
   };
 
   return (
-    <Box fontFamily="Poppins !important" pb="50px">
+    <Box fontFamily="Poppins !important">
+      <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />
       <Header authorizedRole="all" bg="#FBFBFB" />
       <Text fontSize={45} fontWeight={600} m={5} textAlign="center">
         Puppy Details
       </Text>
-
       <Flex px="40px">
-        <Box display="flex" flex={1} pl={3} pr={4}>
+        <Box display="flex" flex={1} pl={3} justifyContent="center">
           <Image
             w="auto"
-            maxH="773px"
+            maxH="650px"
             objectFit="cover"
             borderRadius="20px"
             border={puppy.picture?.url ? 0 : "2px solid #E2E8F0"}
@@ -77,7 +112,7 @@ const PuppyDetail = ({ data }) => {
             alt={`${puppy.name} - ${puppy.breed}`}
           />
         </Box>
-        <Box pl={4} pr={3}>
+        <Box w="40%" pl="20px" pr={3}>
           <SimpleGrid columns={2} spacing={3} textAlign="left">
             <Text className={label}>Puppy Name</Text>
             <Text className={labelText}>{puppy.name}</Text>
@@ -121,12 +156,18 @@ const PuppyDetail = ({ data }) => {
             <Button className={button} mt={8}>
               Application Form
             </Button>
-            <Button className={button}>Apply</Button>
+            <Button
+              className={button}
+              leftIcon={<HeartFilled />}
+              onClick={isFavorite ? removeFromFavorites : addToFavorites}
+              isLoading={isLoading}
+            >
+              {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+            </Button>
             <Button className={button}>Book a Showing</Button>
           </SimpleGrid>
         </Box>
       </Flex>
-
       <Box p="40px">
         <Text fontSize={26} fontWeight={600} mb={3}>
           ABOUT PUPPY
@@ -135,11 +176,12 @@ const PuppyDetail = ({ data }) => {
           {puppy.about_puppy || "N/A"}
         </Box>
       </Box>
+      <Footer currentPage="puppy-detail" />
     </Box>
   );
 };
 
-export const query = graphql`
+export const pageQuery = graphql`
   query ($id: String!) {
     puppy(id: { eq: $id }) {
       id

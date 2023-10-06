@@ -39,7 +39,6 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
         // Try to check cookie
         roles = getCookie(`role|${user.email}`);
         roles = !isEmpty(roles) ? JSON.parse(roles) : [];
-        console.log(roles, "roles from cookie");
         if (
           authorizedRole === "all" &&
           !roles.length &&
@@ -79,7 +78,10 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
               border={0}
             />
             <Box display="flex" ml="3rem">
-              <FavoriteIcon />
+              <FavoriteIcon
+                cursor="pointer"
+                onClick={() => navigate("/favorites")}
+              />
             </Box>
           </Center>
         </Wrap>

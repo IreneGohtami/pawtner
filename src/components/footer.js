@@ -1,6 +1,5 @@
 import React from "react";
 import { Flex, Link, Text, VStack } from "@chakra-ui/react";
-
 import { PhoneTwoTone, MailTwoTone } from "@ant-design/icons";
 
 const Footer = ({ currentPage }) => {
