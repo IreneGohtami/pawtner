@@ -14,9 +14,9 @@
   height: 60px !important;
   border-radius: 14px !important;
   margin-bottom: 15px;
-  background-color: white;
+  background-color: white !important;
   border: 3px solid #fee8a0;
 }
 .button:hover {
-  background-color: #fee8a0;
+  background-color: #fee8a0 !important;
 }

@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { HeartFilled } from "@ant-design/icons";
-import {
-  Box,
-  Button,
-  Flex,
-  Image,
-  SimpleGrid,
-  Text,
-  useTheme,
-} from "@chakra-ui/react";
-import { graphql } from "gatsby";
+import { Box, Button, Flex, Image, SimpleGrid, Text } from "@chakra-ui/react";
+import { graphql, navigate } from "gatsby";
 
 import {
   collection,
@@ -31,7 +23,6 @@ import { button, label, labelText } from "./puppy-detail.module.css";
 
 const PuppyDetail = ({ data }) => {
   const { puppy } = data;
-  const theme = useTheme();
   const { isAuthenticated, user } = useAuth0();
   const [isFavorite, setIsFavorite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -146,7 +137,11 @@ const PuppyDetail = ({ data }) => {
             <Button className={button} mt={8}>
               Contact Breeder
             </Button>
-            <Button className={button} mt={8}>
+            <Button
+              className={button}
+              mt={8}
+              onClick={() => navigate(`/breeder/${puppy.owner_id}`)}
+            >
               View Breeder's Profile
             </Button>
             <Button

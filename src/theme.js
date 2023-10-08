@@ -11,6 +11,9 @@ const theme = {
     purple: {
       500: "#5429FF !important",
     },
+    customYellow: {
+      600: "#FBBC05 !important",
+    },
   },
   fonts: {
     body: "'Plus Jakarta Sans', Helvetica, sans-serif !important",

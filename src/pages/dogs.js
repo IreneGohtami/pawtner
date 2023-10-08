@@ -8,7 +8,6 @@ import Seo from "../components/seo";
 
 const DogsPage = ({ data }) => {
   const puppyList = data.allPuppy.nodes;
-  console.log(puppyList, "puupyList");
 
   const renderPuppy = (puppy) => {
     return (
