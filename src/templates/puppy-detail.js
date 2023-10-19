@@ -140,7 +140,9 @@ const PuppyDetail = ({ data }) => {
             <Button
               className={button}
               mt={8}
-              onClick={() => navigate(`/breeder/${puppy.owner_id}`)}
+              onClick={() =>
+                navigate(`/breeder/${puppy.owner_id.split("|").pop()}`)
+              }
             >
               View Breeder's Profile
             </Button>

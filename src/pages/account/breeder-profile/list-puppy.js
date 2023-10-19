@@ -148,6 +148,7 @@ const ListPuppyTable = ({
                     alt="puppy picture"
                     w="40px"
                     h="40px"
+                    objectFit="cover"
                   />
                 ) : (
                   <PictureOutlined style={{ fontSize: "20px" }} />

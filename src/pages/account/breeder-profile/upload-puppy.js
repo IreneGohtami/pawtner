@@ -2,12 +2,17 @@ import axios from "axios";
 import { isEmpty } from "lodash";
 import moment from "moment";
 import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  getDownloadURL,
+  ref,
+  uploadBytes,
+  deleteObject,
+} from "firebase/storage";
 import React, { useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import { uid } from "uid";
 import { Upload } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import {
   Box,
   Button,
@@ -73,6 +78,7 @@ const UploadPuppyPage = ({
     picture: null,
     size: "",
     status: "Available",
+    certificates: [],
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -81,9 +87,12 @@ const UploadPuppyPage = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [certificates, setCertificates] = useState([]);
   const [breedList, setBreedList] = useState([]);
   const [onPictureHover, setOnPictureHover] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [uploadCertificateError, setUploadCertificateError] = useState("");
+  const [deletedCertificates, setDeletedCertificates] = useState([]);
   const colors = ["Brown", "Black", "White", "Gray", "Others"];
   const statuses = ["Available", "Adopted", "Unlisted"];
   const sizes = ["Small", "Medium", "Large"];
@@ -135,6 +144,20 @@ const UploadPuppyPage = ({
           ? puppyData.picture.url
           : ""
       );
+
+      setCertificates([]); // reset
+      if (puppyData?.certificates?.length) {
+        const fileList = [];
+        puppyData.certificates.forEach((certificate) => {
+          fileList.push({
+            uid: certificate.reference,
+            name: `${certificate.reference}.png`,
+            status: "done",
+            url: certificate.url,
+          });
+        });
+        setCertificates(fileList);
+      }
     }, 300);
   }, [action, puppyData]);
 
@@ -155,7 +178,20 @@ const UploadPuppyPage = ({
 
   const handleUploadPuppy = async () => {
     setUploadError("");
+    setUploadCertificateError("");
     if (formError || !validateForm()) {
+      return;
+    }
+
+    let hasError = false;
+    certificates.forEach((certificate) => {
+      if (certificate.error) {
+        hasError = true;
+        setUploadCertificateError("One or more certificates are invalid.");
+        return;
+      }
+    });
+    if (hasError) {
       return;
     }
 
@@ -169,7 +205,7 @@ const UploadPuppyPage = ({
     let puppyPictureUrl = "";
     let isPictureChanged = false;
 
-    if (form.picture && imageUrl /*&& imageUrl !== form.picture*/) {
+    if (form.picture && imageUrl) {
       if (action === "edit" && puppyData.picture?.url === imageUrl) {
         // skip uploading picture if picture is not changed
       } else {
@@ -198,6 +234,61 @@ const UploadPuppyPage = ({
       }
     }
 
+    // Handle certificate upload & deletion
+    const certificateList = [];
+    if (certificates.length) {
+      //console.log(certificates, "certificates");
+      //return;
+      let uploadFailed = false;
+      for (let i = 0; i < certificates.length; i++) {
+        const certificate = certificates[i];
+        if (certificate.status === "done") {
+          certificateList.push({
+            reference: certificate.uid,
+            url: certificate.url,
+          });
+          continue;
+        }
+        const certificateRefId = uid();
+        try {
+          const storageRef = ref(
+            storage,
+            `users/${userId}/documents/certificates/${certificateRefId}.png`
+          );
+
+          const snapshot = await uploadBytes(
+            storageRef,
+            certificate.originFileObj
+          );
+          const certificateUrl = await getDownloadURL(snapshot.ref);
+          certificateList.push({
+            reference: certificateRefId,
+            url: certificateUrl,
+          });
+        } catch (error) {
+          setUploadError("Error uploading certificate. Please try again.");
+          setIsSubmitting(false);
+          console.log("Error uploading certificate:", error);
+          uploadFailed = true;
+          return;
+        }
+      }
+
+      if (uploadFailed) {
+        return;
+      }
+    }
+
+    deletedCertificates.forEach(async (certificate) => {
+      const storageRef = ref(
+        storage,
+        `users/${userId}/documents/certificates/${certificate}.png`
+      );
+      await deleteObject(storageRef);
+    });
+
+    setForm({ ...form, certificates: certificateList });
+
     const formattedDate = form.rehoming_date
       ? moment(form.rehoming_date).format("DD/MM/YYYY")
       : "";
@@ -214,6 +305,7 @@ const UploadPuppyPage = ({
       }),
       ...(action === "add" && { created_at: now }),
       updated_at: now,
+      certificates: certificateList,
     };
 
     try {
@@ -249,6 +341,9 @@ const UploadPuppyPage = ({
     setFormError("");
     setImageUrl("");
     setUploadError("");
+    setUploadCertificateError("");
+    setCertificates([]);
+    setDeletedCertificates([]);
     setIsSubmitting(false);
     setIsValidating(false);
     setLoading(false);
@@ -279,15 +374,25 @@ const UploadPuppyPage = ({
     return true;
   };
 
-  const validateImage = (file) => {
+  const validateImage = (file, type = "profile") => {
+    setUploadError("");
+    setUploadCertificateError("");
+
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
-      setUploadError("You can only upload JPG/PNG file");
+      const errMsg = "You can only upload JPG/PNG file";
+      type === "profile"
+        ? setUploadError(errMsg)
+        : setUploadCertificateError(errMsg);
     }
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
-      setUploadError("Image must be smaller than 2MB");
+      const errMsg = "Image must be smaller than 2MB";
+      type === "profile"
+        ? setUploadError(errMsg)
+        : setUploadCertificateError(errMsg);
     }
+
     return isJpgOrPng && isLt2M;
   };
 
@@ -296,8 +401,8 @@ const UploadPuppyPage = ({
       return;
     }
 
-    const file = event.file.originFileObj;
-    if (file) {
+    const file = event.file;
+    if (file && !uploadError) {
       setLoading(true);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -306,7 +411,36 @@ const UploadPuppyPage = ({
         setFormError("");
         setLoading(false);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file?.originFileObj || file);
+    }
+  };
+
+  const handleCertificateChange = (event) => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const { file, fileList } = event;
+    const { status } = file;
+
+    if (status === "removed") {
+      const newCertificates = certificates.filter(
+        (certificate) => certificate.uid !== file.uid
+      );
+      setCertificates(newCertificates);
+      setDeletedCertificates([...deletedCertificates, file.uid]);
+    } else if (file) {
+      if (status === "error") {
+        // change to pending so it doesn't have the default error cannot post 404
+        file.status = "pending";
+      } else {
+        // no status means it failed validateImage validation
+        fileList[fileList.length - 1].status = "error";
+        fileList[fileList.length - 1].error = {};
+        fileList[fileList.length - 1].error.message = uploadCertificateError;
+      }
+
+      setCertificates(event.fileList);
     }
   };
 
@@ -368,7 +502,9 @@ const UploadPuppyPage = ({
                           name="picture"
                           accept="image/*"
                           showUploadList={false}
-                          beforeUpload={validateImage}
+                          beforeUpload={(file) =>
+                            validateImage(file, "profile")
+                          }
                           onChange={handleChange}
                         >
                           {!imageUrl ? (
@@ -547,7 +683,7 @@ const UploadPuppyPage = ({
             <Box flex={4}>
               <FormControl>
                 <Text fontWeight={600} mb={3}>
-                  About Puppy
+                  About puppy
                 </Text>
                 <Textarea
                   name="about_puppy"
@@ -561,6 +697,41 @@ const UploadPuppyPage = ({
                   isReadOnly={action === "view"}
                 />
               </FormControl>
+            </Box>
+            <Spacer />
+          </Flex>
+          <Flex mt={4}>
+            <Spacer />
+            <Box flex={4}>
+              <Text fontWeight={600} mb={3}>
+                Puppy certificate(s)
+              </Text>
+              {uploadCertificateError && (
+                <Text color="red" mb={2}>
+                  {uploadCertificateError}
+                </Text>
+              )}
+              <Upload
+                name="certificates"
+                accept="image/*"
+                showUploadList={true}
+                multiple={true}
+                maxCount={3}
+                beforeUpload={(file) => validateImage(file, "certificate")}
+                onChange={handleCertificateChange}
+                fileList={certificates}
+                disabled={action === "view"}
+              >
+                {action !== "view" && (
+                  <Button
+                    leftIcon={<UploadOutlined />}
+                    bg={theme.colors.primary}
+                    colorScheme="yellow"
+                  >
+                    Upload (Max: 3)
+                  </Button>
+                )}
+              </Upload>
             </Box>
             <Spacer />
           </Flex>

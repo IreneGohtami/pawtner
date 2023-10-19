@@ -34,8 +34,9 @@ exports.createPages = async ({ actions, graphql }) => {
   ];
   // Create a page for each breeder
   breederIds.forEach((id) => {
+    const userId = id.split("|").pop();
     createPage({
-      path: `/breeder/${id}`,
+      path: `/breeder/${userId}`,
       component: require.resolve("./src/templates/breeder-detail.js"),
       context: {
         // Pass the ID as context to the template

@@ -4,6 +4,7 @@ import {
   ref,
   updateMetadata,
   uploadBytes,
+  deleteObject,
 } from "firebase/storage";
 import { Field, Form, Formik } from "formik";
 import countries from "i18n-iso-countries";
@@ -11,6 +12,8 @@ import en from "i18n-iso-countries/langs/en.json";
 import { isEmpty } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 
+import { Upload } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import {
   Accordion,
@@ -82,6 +85,7 @@ const BreederProfile = () => {
     profile_picture: "",
     following: 0,
     followers: 0,
+    documents: [],
   };
 
   const [password, setPassword] = useState("");
@@ -95,6 +99,8 @@ const BreederProfile = () => {
   const [successAlert, setSuccessAlert] = useState(null);
   const [modalAction, setModalAction] = useState("add");
   const [modalData, setModalData] = useState({});
+  const [documents, setDocuments] = useState([]);
+  const [documentUploadError, setDocumentUploadError] = useState(null);
 
   useEffect(() => {
     const names = user.name.split(" ");
@@ -106,6 +112,7 @@ const BreederProfile = () => {
         const { data } = await axios.get(
           `/api/auth0?action=get_user_metadata&userId=${user.sub}`
         );
+
         setUserMetadata(
           !isEmpty(data.user_metadata)
             ? { ...data.user_metadata, password: "", retype_password: "" }
@@ -117,7 +124,8 @@ const BreederProfile = () => {
                 profile_picture: user.picture || "",
               }
         );
-        setOriginalMetadata(userMetadata);
+        setOriginalMetadata(data.user_metadata);
+        setDocuments(data.user_metadata?.documents || []);
         setConnection(data.identities[0].connection);
         setErrorAlert(null);
       } catch (error) {
@@ -226,6 +234,27 @@ const BreederProfile = () => {
     setIsUploadingPicture(false);
   };
 
+  const updateUserDocuments = async (documents) => {
+    try {
+      await axios.post("/api/auth0", {
+        action: "update_user_metadata",
+        userId: user.sub,
+        connection,
+        payload: {
+          user_metadata: {
+            documents,
+          },
+        },
+      });
+      setUserMetadata({ ...userMetadata, documents });
+      setOriginalMetadata(userMetadata);
+      setErrorAlert(null);
+    } catch (e) {
+      setErrorAlert(e?.response?.data || e.message);
+    }
+    setIsUploadingPicture(false);
+  };
+
   const validatePassword = (value) => {
     if (!value) {
       return "";
@@ -254,14 +283,24 @@ const BreederProfile = () => {
     fileInputRef.current.click();
   };
 
-  const validateImage = (file) => {
+  const validateImage = (file, type = "profile") => {
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
-      setErrorAlert("You can only upload JPG/PNG file");
+      const errMsg = "You can only upload JPG/PNG file";
+      if (type === "profile") {
+        setErrorAlert(errMsg);
+      } else {
+        setDocumentUploadError(errMsg);
+      }
     }
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
-      setErrorAlert("Image must be smaller than 2MB");
+      const errMsg = "Image must be smaller than 2MB";
+      if (type === "profile") {
+        setErrorAlert(errMsg);
+      } else {
+        setDocumentUploadError(errMsg);
+      }
     }
     return isJpgOrPng && isLt2M;
   };
@@ -295,6 +334,86 @@ const BreederProfile = () => {
     }
   };
 
+  const handleDocumentChange = async (event) => {
+    console.log(event, "event");
+    const { file, fileList } = event;
+    const { status } = file;
+    const userId = user ? user.sub.split("|")[1] : "";
+
+    if (status === "removed") {
+      const newDocuments = documents.filter(
+        (document) => document.uid !== file.uid
+      );
+      setDocuments(newDocuments);
+
+      // delete from storage if exists in userMetadata.documents
+      if (
+        userMetadata.documents.find(
+          (document) => document.reference === file.reference
+        )
+      ) {
+        try {
+          const storageRef = ref(
+            storage,
+            `users/${userId}/documents/certificates/${file.name}`
+          );
+          await deleteObject(storageRef);
+        } catch (error) {
+          console.log("Error deleting document:", error);
+        }
+
+        // update user.metadata.documents
+        const newDocumentList = userMetadata.documents.filter(
+          (document) => document.reference !== file.reference
+        );
+        await updateUserDocuments(newDocumentList);
+      }
+    } else if (file) {
+      if (!status) {
+        // no status means it failed validateImage validation
+        fileList[fileList.length - 1].status = "error";
+        fileList[fileList.length - 1].error = {};
+        fileList[fileList.length - 1].error.message = documentUploadError;
+      }
+
+      setDocuments(fileList);
+    }
+  };
+
+  const uploadDocument = async (event) => {
+    const { file } = event;
+    const userId = user ? user.sub.split("|")[1] : "";
+
+    // upload directly to storage
+    const storageRef = ref(
+      storage,
+      `users/${userId}/documents/certificates/${file.name}`
+    );
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const imageUrl = await getDownloadURL(snapshot.ref);
+
+      // update user.metadata.documents
+      await updateUserDocuments([
+        ...userMetadata.documents,
+        {
+          reference: file.uid,
+          name: snapshot.ref.name,
+          url: imageUrl,
+          status: "done",
+        },
+      ]);
+
+      setDocumentUploadError(null);
+    } catch (error) {
+      setDocumentUploadError("Error uploading document. Please try again.");
+    }
+
+    documents[documents.length - 1].percent = 100;
+    documents[documents.length - 1].status = "done";
+    setDocuments(documents);
+  };
+
   countries.registerLocale(en);
   const countryObj = countries.getNames("en", { select: "official" });
   const countryArr = Object.entries(countryObj).map(([key, value]) => {
@@ -321,7 +440,7 @@ const BreederProfile = () => {
         fontFamily="Poppins !important"
       >
         {!isFormLoading && (
-          <Accordion defaultIndex={[0, 1]} allowMultiple>
+          <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
             <AccordionItem>
               <AccordionButton>
                 <AccordionIcon fontSize={30} />
@@ -667,6 +786,48 @@ const BreederProfile = () => {
                     action={modalAction}
                     puppyData={modalData}
                   />
+                </Box>
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>
+                <AccordionIcon fontSize={30} />
+                <Text fontSize={28} fontWeight={600}>
+                  &emsp;Other Documents
+                </Text>
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                <Box bg="white" borderRadius={20} p="25px">
+                  <Text fontSize={16}>
+                    Upload any supporting documents, certifications, or awards
+                    to showcase your breeding business.
+                  </Text>
+                  <Box maxW={"300px !important"}>
+                    <Upload
+                      name="documents"
+                      accept="image/*"
+                      showUploadList={true}
+                      multiple={true}
+                      maxCount={10}
+                      beforeUpload={(file) =>
+                        validateImage(file, "certificate")
+                      }
+                      onChange={handleDocumentChange}
+                      customRequest={uploadDocument}
+                      fileList={documents}
+                      progress={{ size: 3 }}
+                    >
+                      <Button
+                        bg={theme.colors.primary}
+                        colorScheme="yellow"
+                        leftIcon={<UploadOutlined />}
+                        mt={4}
+                      >
+                        Upload
+                      </Button>
+                    </Upload>
+                  </Box>
                 </Box>
               </AccordionPanel>
             </AccordionItem>

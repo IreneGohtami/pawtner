@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { isEmpty } from "lodash";
 import { navigate } from "gatsby";
+import { SettingOutlined } from "@ant-design/icons";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   Box,
@@ -97,7 +98,9 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
               <>
                 {role.includes("admin") && (
                   <Text ml="30px" fontWeight={isAdminPage ? 600 : 400}>
-                    <Link href="/admin">Admin Panel</Link>
+                    <Link href="/admin">
+                      <SettingOutlined />
+                    </Link>
                   </Text>
                 )}
                 <Text mx="30px" fontWeight={isProfilePage ? 600 : 400}>

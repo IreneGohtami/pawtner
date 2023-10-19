@@ -11,8 +11,14 @@ import {
   Button,
   ChakraProvider,
   Flex,
+  Hide,
   Icon,
   Image,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalOverlay,
   Spacer,
   Tab,
   Tabs,
@@ -21,6 +27,7 @@ import {
   TabPanels,
   Text,
   VStack,
+  useDisclosure,
 } from "@chakra-ui/react";
 
 import Header from "../components/header";
@@ -48,11 +55,14 @@ const BreedersPage = ({ pageContext, data }) => {
     profile_picture: "",
     following: 0,
     followers: 0,
+    documents: [],
   };
 
   const [breederInfo, setBreederInfo] = useState(defaultMetadata);
   const [isLoading, setIsLoading] = useState(true);
   const [errorAlert, setErrorAlert] = useState(null);
+  const [viewImageUrl, setViewImageUrl] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     async function fetchBreederInfo() {
@@ -61,7 +71,7 @@ const BreedersPage = ({ pageContext, data }) => {
         const { data } = await axios.get(
           `/api/auth0?action=get_user_metadata&userId=${userId}`
         );
-        console.log(data.user_metadata);
+        console.log(data.user_metadata, "user_metadata");
         setBreederInfo(data?.user_metadata || defaultMetadata);
         setErrorAlert(null);
       } catch (error) {
@@ -72,8 +82,22 @@ const BreedersPage = ({ pageContext, data }) => {
     fetchBreederInfo();
   }, []);
 
+  const viewImage = (url) => {
+    setViewImageUrl(url);
+    onOpen();
+  };
+
   return (
     <ChakraProvider theme={theme}>
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton bg="rgba(255, 255, 255, 0.9)" />
+          <ModalBody pb={6} m={"0 auto"}>
+            <Image src={viewImageUrl} alt="image" />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
       <Box bg="#F9F9F9" fontFamily="Poppins !important">
         <Toast
           description={errorAlert}
@@ -81,21 +105,22 @@ const BreedersPage = ({ pageContext, data }) => {
           setAlert={setErrorAlert}
         />
         <Header authorizedRole="all" bg="#F9F9F9" />
-        <Flex px="4rem" py="20px">
+        <Flex px="4rem" py="20px" flexWrap="wrap">
           {isLoading ? (
             <CustomSpinner />
           ) : (
             <>
-              <VStack flex="1" mr={5}>
+              <VStack flex="1" mr={5} mb={5}>
                 <Box borderRadius={10} bg="white" w="100%">
                   <Image
                     src="/breeder-cover-photo.jpeg"
+                    minW="100%"
                     h={150}
                     borderRadius={10}
                     objectFit="cover"
                     alt="cover photo"
                   />
-                  <Flex>
+                  <Flex flexWrap="wrap">
                     <Box px="30px" pb="20px" mt="-105px">
                       <Image
                         src={breederInfo.profile_picture}
@@ -130,8 +155,10 @@ const BreedersPage = ({ pageContext, data }) => {
                           : `${breederInfo.country} || Canada`}
                       </Text>
                     </Box>
-                    <Spacer />
-                    <Box px="30px" py="20px" mt="60px">
+                    <Hide below="xl">
+                      <Spacer />
+                    </Hide>
+                    <Box px="30px" py="20px" mt={{ base: 0, lg: "60px" }}>
                       <Button bg="primary" colorScheme="yellow">
                         Book showing
                       </Button>
@@ -157,11 +184,11 @@ const BreedersPage = ({ pageContext, data }) => {
                     <TabPanels overflow="auto">
                       <TabPanel>
                         {puppyList.length > 0 && (
-                          <Flex flexWrap="nowrap">
+                          <Flex flexWrap="nowrap" maxW="800px">
                             {puppyList.map((puppy) => (
                               <Box
                                 key={puppy.id}
-                                w="30%"
+                                minW="200px"
                                 bg="#F9F9F9"
                                 p="20px"
                                 mb="10px"
@@ -198,10 +225,46 @@ const BreedersPage = ({ pageContext, data }) => {
                         )}
                       </TabPanel>
                       <TabPanel>
-                        <p>Coming soon!</p>
+                        <Flex minW="200px" bg="#F9F9F9" p="20px" mb="10px">
+                          {puppyList.map(
+                            (puppy) =>
+                              puppy?.picture?.url && (
+                                <Image
+                                  key={puppy.picture.reference}
+                                  src={puppy.picture.url}
+                                  alt="puppy"
+                                  h={150}
+                                  borderRadius="6px"
+                                  objectFit="contain"
+                                  m={2}
+                                  cursor="pointer"
+                                  onClick={() => viewImage(puppy.picture.url)}
+                                />
+                              )
+                          )}
+                        </Flex>
                       </TabPanel>
                       <TabPanel>
-                        <p>Coming soon!</p>
+                        <Flex minW="200px" bg="#F9F9F9" p="20px" mb="10px">
+                          {puppyList.map((puppy) =>
+                            puppy?.certificates?.map(
+                              (certificate) =>
+                                certificate.url && (
+                                  <Image
+                                    key={certificate.reference}
+                                    src={certificate.url}
+                                    alt="puppy certificate"
+                                    h={150}
+                                    borderRadius="6px"
+                                    objectFit="contain"
+                                    m={2}
+                                    cursor="pointer"
+                                    onClick={() => viewImage(certificate.url)}
+                                  />
+                                )
+                            )
+                          )}
+                        </Flex>
                       </TabPanel>
                       <TabPanel>
                         <p>Coming soon!</p>
@@ -213,7 +276,7 @@ const BreedersPage = ({ pageContext, data }) => {
                   </Tabs>
                 </Box>
               </VStack>
-              <VStack pl="20px">
+              <VStack>
                 <Box
                   w="450px"
                   bg="rgba(254, 232, 160, 0.19)"
@@ -224,7 +287,24 @@ const BreedersPage = ({ pageContext, data }) => {
                   <Text fontSize={16} fontWeight={500}>
                     <StarFilled /> Certification
                   </Text>
-                  <Text fontSize={18}>upload here</Text>
+                  <Flex mt={2}>
+                    {breederInfo?.documents?.map((document) => (
+                      <Image
+                        key={document.reference}
+                        src={document.url}
+                        alt="breeder certificate"
+                        h={150}
+                        borderRadius="6px"
+                        objectFit="contain"
+                        m={2}
+                        cursor="pointer"
+                        onClick={() => viewImage(document.url)}
+                      />
+                    ))}
+                    {!breederInfo?.documents?.length && (
+                      <Text>No documents uploaded</Text>
+                    )}
+                  </Flex>
                 </Box>
                 <Box w="450px" bg="white" borderRadius={10} p="20px">
                   <Text fontSize={16} fontWeight={500}>
@@ -237,7 +317,7 @@ const BreedersPage = ({ pageContext, data }) => {
                     py="10px"
                     px="20px"
                   >
-                    <Text fontSize={14}>{breederInfo.about_me}</Text>
+                    <Text>{breederInfo.about_me}</Text>
                   </Box>
                 </Box>
               </VStack>
@@ -258,6 +338,10 @@ export const pageQuery = graphql`
         name
         breed
         picture {
+          url
+          reference
+        }
+        certificates {
           url
           reference
         }
