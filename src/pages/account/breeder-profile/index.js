@@ -83,6 +83,7 @@ const BreederProfile = () => {
     country: "",
     about_me: "",
     profile_picture: "",
+    breeder_verified: false,
     following: 0,
     followers: 0,
     documents: [],
@@ -778,6 +779,7 @@ const BreederProfile = () => {
 
                   <UploadPuppyPage
                     userId={user.sub}
+                    breederVerified={userMetadata.breeder_verified || false}
                     isOpen={isOpen}
                     onClose={onClose}
                     setSuccessAlert={setSuccessAlert}

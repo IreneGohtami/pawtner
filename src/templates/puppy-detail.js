@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { HeartFilled } from "@ant-design/icons";
+import { LoadingOutlined, HeartFilled, HeartOutlined } from "@ant-design/icons";
 import { Box, Button, Flex, Image, SimpleGrid, Text } from "@chakra-ui/react";
 import { graphql, navigate } from "gatsby";
 
@@ -19,7 +19,12 @@ import Header from "../components/header";
 import Footer from "../components/footer";
 import Seo from "../components/seo";
 import Toast from "../components/toast";
-import { button, label, labelText } from "./puppy-detail.module.css";
+import {
+  button,
+  label,
+  labelText,
+  favoriteButton,
+} from "./puppy-detail.module.css";
 
 const PuppyDetail = ({ data }) => {
   const { puppy } = data;
@@ -91,7 +96,7 @@ const PuppyDetail = ({ data }) => {
         Puppy Details
       </Text>
       <Flex px="40px">
-        <Box display="flex" flex={1} pl={3} justifyContent="center">
+        <Box display="block" pl={3} textAlign="right">
           <Image
             w="auto"
             maxH="650px"
@@ -102,6 +107,19 @@ const PuppyDetail = ({ data }) => {
             src={puppy.picture?.url || "/default-puppy-img.jpg"}
             alt={`${puppy.name} - ${puppy.breed}`}
           />
+          {isLoading ? (
+            <LoadingOutlined className={favoriteButton} spin />
+          ) : isFavorite ? (
+            <HeartFilled
+              className={favoriteButton}
+              onClick={removeFromFavorites}
+            />
+          ) : (
+            <HeartOutlined
+              className={favoriteButton}
+              onClick={addToFavorites}
+            />
+          )}
         </Box>
         <Box w="40%" pl="20px" pr={3}>
           <SimpleGrid columns={2} spacing={3} textAlign="left">
@@ -146,15 +164,7 @@ const PuppyDetail = ({ data }) => {
             >
               View Breeder's Profile
             </Button>
-            <Button
-              className={button}
-              leftIcon={<HeartFilled />}
-              onClick={isFavorite ? removeFromFavorites : addToFavorites}
-              isLoading={isLoading}
-            >
-              {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-            </Button>
-            <Button className={button}>Book a Showing</Button>
+            {/*<Button className={button}>Book a Showing</Button>*/}
           </SimpleGrid>
         </Box>
       </Flex>

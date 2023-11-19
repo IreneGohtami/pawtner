@@ -97,7 +97,6 @@ export default async function handler(req, res) {
             return user;
           });
           await Promise.all(rolePromises);
-          //console.log(users, "users\n\n");
 
           res.status(200).json(users || {});
         } catch (error) {
@@ -106,7 +105,6 @@ export default async function handler(req, res) {
             .status(data.statusCode || 500)
             .send(data.message || "Error fetching all users.");
         }
-
         break;
     }
   } else if (req.method === "POST") {

@@ -20,3 +20,9 @@
 .button:hover {
   background-color: #fee8a0 !important;
 }
+
+.favorite-button {
+  font-size: 30px !important;
+  text-align: right !important;
+  margin: 10px;
+}

@@ -136,7 +136,12 @@ const AdminPage = () => {
         </Text>
         <Text whiteSpace="pre-wrap" w="80% !important">
           {key === "profile_picture" ? (
-            <a href={value} target="_blank" style={{ color: "blue" }}>
+            <a
+              href={value}
+              target="_blank"
+              style={{ color: "blue" }}
+              rel="noreferrer"
+            >
               Link
             </a>
           ) : key === "breeder_verified" ? (

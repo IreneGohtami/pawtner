@@ -57,7 +57,7 @@ const DogsPage = ({ data }) => {
 export const query = graphql`
   query {
     allPuppy(
-      sort: { fields: created_at, order: ASC }
+      sort: { created_at: ASC }
       filter: { status: { eq: "Available" } }
     ) {
       nodes {

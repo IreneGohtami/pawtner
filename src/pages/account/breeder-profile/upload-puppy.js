@@ -53,6 +53,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const UploadPuppyPage = ({
   userId,
+  breederVerified,
   isOpen,
   onClose,
   setSuccessAlert,
@@ -77,7 +78,7 @@ const UploadPuppyPage = ({
     about_puppy: "",
     picture: null,
     size: "",
-    status: "Available",
+    status: "Unlisted",
     certificates: [],
   };
 
@@ -350,10 +351,10 @@ const UploadPuppyPage = ({
     onClose();
   };
 
-  const renderErrorMessage = () => {
+  const renderErrorMessage = (msg = "Required") => {
     return (
       <FormErrorMessage position="absolute" fontSize="11px" mt={0}>
-        &emsp; &emsp; Required
+        &emsp; &emsp; {msg}
       </FormErrorMessage>
     );
   };
@@ -369,6 +370,13 @@ const UploadPuppyPage = ({
       !form.size ||
       !form.status
     ) {
+      return false;
+    }
+    // User can only list puppy when their breeder profile is verified
+    if (form.status === "Available" && !breederVerified) {
+      setFormError(
+        'Your profile must be verified by our admin first to list puppy. Please set status to "Unlisted".'
+      );
       return false;
     }
     return true;
@@ -485,7 +493,7 @@ const UploadPuppyPage = ({
           <Flex>
             <Spacer />
             <Box flex={3}>
-              <FormControl mb={5} display="inline-grid" justifyContent="center">
+              <FormControl mb={5} display="inline-grid" justifyItems="center">
                 {(formError || uploadError) && (
                   <Text color="red" mb={2}>
                     {formError || uploadError}
@@ -661,7 +669,13 @@ const UploadPuppyPage = ({
                   )}
                   {renderErrorMessage()}
                 </FormControl>
-                <FormControl>
+                <FormControl
+                  isInvalid={
+                    isValidating &&
+                    form.status === "Available" &&
+                    !breederVerified
+                  }
+                >
                   {action === "view" ? (
                     <Input {...inputProperties("status", "text")} />
                   ) : (

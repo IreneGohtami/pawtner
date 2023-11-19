@@ -3,7 +3,7 @@ exports.createPages = async ({ actions, graphql }) => {
 
   const result = await graphql(`
     query {
-      allPuppy {
+      allPuppy(filter: { status: { eq: "Available" } }) {
         nodes {
           id
           owner_id
