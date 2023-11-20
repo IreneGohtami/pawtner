@@ -1,0 +1,42 @@
+.read-text {
+  color: #180a29 !important;
+  font-size: 16px;
+  opacity: 0.5;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-right: 2px;
+}
+
+.unread-text {
+  font-size: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-right: 2px;
+}
+
+.unread-msg-count {
+  background-color: #9969ff;
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  height: 26px;
+  width: 26px;
+  text-align: center;
+  line-height: 26px;
+}
+
+.profile-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.msg-input,
+.msg-input:focus {
+  border: 0 !important;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none !important;
+}

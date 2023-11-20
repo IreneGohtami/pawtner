@@ -30,13 +30,14 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 
+import ChatPage from "../components/chat";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Seo from "../components/seo";
+import CustomSpinner from "../components/spinner";
 import Toast from "../components/toast";
 import LocationIcon from "../images/icons/location.inline.svg";
 import theme from "../theme";
-import CustomSpinner from "../components/spinner";
 
 const BreedersPage = ({ pageContext, data }) => {
   const userId = pageContext.id;
@@ -62,6 +63,7 @@ const BreedersPage = ({ pageContext, data }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorAlert, setErrorAlert] = useState(null);
   const [viewImageUrl, setViewImageUrl] = useState(null);
+  const [displayChat, setDisplayChat] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
@@ -71,7 +73,6 @@ const BreedersPage = ({ pageContext, data }) => {
         const { data } = await axios.get(
           `/api/auth0?action=get_user_metadata&userId=${userId}`
         );
-        console.log(data.user_metadata, "user_metadata");
         setBreederInfo(data?.user_metadata || defaultMetadata);
         setErrorAlert(null);
       } catch (error) {
@@ -89,12 +90,30 @@ const BreedersPage = ({ pageContext, data }) => {
 
   return (
     <ChakraProvider theme={theme}>
+      {/* Enlarge image modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton bg="rgba(255, 255, 255, 0.9)" />
           <ModalBody pb={6} m={"0 auto"}>
             <Image src={viewImageUrl} alt="image" />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Chat modal */}
+      <Modal
+        isOpen={displayChat}
+        onClose={() => setDisplayChat(false)}
+        size="full"
+      >
+        <ModalContent>
+          <ModalBody p={0}>
+            <ChatPage
+              breederId={userId.split("|").pop()}
+              breederInfo={breederInfo}
+              setDisplayChat={setDisplayChat}
+            />
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -165,7 +184,11 @@ const BreedersPage = ({ pageContext, data }) => {
                       <Button bg="primary" colorScheme="yellow" mx={3}>
                         Application
                       </Button>
-                      <Button bg="primary" colorScheme="yellow">
+                      <Button
+                        bg="primary"
+                        colorScheme="yellow"
+                        onClick={() => setDisplayChat(true)}
+                      >
                         Connect
                       </Button>
                     </Box>

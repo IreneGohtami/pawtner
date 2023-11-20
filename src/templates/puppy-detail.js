@@ -1,7 +1,18 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { LoadingOutlined, HeartFilled, HeartOutlined } from "@ant-design/icons";
-import { Box, Button, Flex, Image, SimpleGrid, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Image,
+  Modal,
+  ModalBody,
+  ModalContent,
+  SimpleGrid,
+  Text,
+} from "@chakra-ui/react";
 import { graphql, navigate } from "gatsby";
 
 import {
@@ -15,6 +26,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
+import ChatPage from "../components/chat";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Seo from "../components/seo";
@@ -32,6 +44,42 @@ const PuppyDetail = ({ data }) => {
   const [isFavorite, setIsFavorite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorAlert, setErrorAlert] = useState(null);
+  const [displayChat, setDisplayChat] = useState(false);
+  const [breederInfo, setBreederInfo] = useState(null);
+
+  const defaultMetadata = {
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    retype_password: "",
+    address: "",
+    city: "",
+    country: "",
+    about_me: "",
+    profile_picture: "",
+    following: 0,
+    followers: 0,
+    documents: [],
+  };
+
+  useEffect(() => {
+    async function fetchBreederInfo() {
+      try {
+        setIsLoading(true);
+        const { data } = await axios.get(
+          `/api/auth0?action=get_user_metadata&userId=${puppy.owner_id}`
+        );
+        setBreederInfo(data?.user_metadata || defaultMetadata);
+        setErrorAlert(null);
+      } catch (error) {
+        setErrorAlert(error?.response?.data || error.message);
+      }
+      setIsLoading(false);
+    }
+    fetchBreederInfo();
+  }, []);
 
   // Check for favorite
   useEffect(() => {
@@ -90,6 +138,23 @@ const PuppyDetail = ({ data }) => {
 
   return (
     <Box fontFamily="Poppins !important">
+      {/* Chat modal */}
+      <Modal
+        isOpen={displayChat}
+        onClose={() => setDisplayChat(false)}
+        size="full"
+      >
+        <ModalContent>
+          <ModalBody p={0}>
+            <ChatPage
+              breederId={puppy.owner_id.split("|").pop()}
+              breederInfo={breederInfo}
+              setDisplayChat={setDisplayChat}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
       <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />
       <Header authorizedRole="all" bg="#FBFBFB" />
       <Text fontSize={45} fontWeight={600} m={5} textAlign="center">
@@ -152,7 +217,11 @@ const PuppyDetail = ({ data }) => {
             <Text className={label}>Availability</Text>
             <Text className={labelText}>{mapStatus(puppy.status)}</Text>
 
-            <Button className={button} mt={8}>
+            <Button
+              className={button}
+              mt={8}
+              onClick={() => setDisplayChat(true)}
+            >
               Contact Breeder
             </Button>
             <Button
