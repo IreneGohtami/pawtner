@@ -2,7 +2,6 @@ import axios from "axios";
 import {
   getDownloadURL,
   ref,
-  updateMetadata,
   uploadBytes,
   deleteObject,
 } from "firebase/storage";
@@ -35,6 +34,10 @@ import {
   Icon,
   Image,
   Input,
+  Link,
+  Modal,
+  ModalBody,
+  ModalContent,
   Select,
   Stack,
   Text,
@@ -43,7 +46,9 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
+import { BellIcon } from "@chakra-ui/icons";
 
+import ChatPage from "../../../components/chat";
 import Header from "../../../components/header";
 import Seo from "../../../components/seo";
 import CustomSpinner from "../../../components/spinner";
@@ -102,6 +107,7 @@ const BreederProfile = () => {
   const [modalData, setModalData] = useState({});
   const [documents, setDocuments] = useState([]);
   const [documentUploadError, setDocumentUploadError] = useState(null);
+  const [displayChat, setDisplayChat] = useState(false);
 
   useEffect(() => {
     const names = user.name.split(" ");
@@ -317,11 +323,6 @@ const BreederProfile = () => {
       const storageRef = ref(storage, `users/${userId}/profile_picture.png`);
 
       try {
-        await updateMetadata(storageRef, {
-          customMetadata: {
-            userId: userId,
-          },
-        });
         const snapshot = await uploadBytes(storageRef, file);
         const imageUrl = await getDownloadURL(snapshot.ref);
 
@@ -336,7 +337,6 @@ const BreederProfile = () => {
   };
 
   const handleDocumentChange = async (event) => {
-    console.log(event, "event");
     const { file, fileList } = event;
     const { status } = file;
     const userId = user ? user.sub.split("|")[1] : "";
@@ -432,7 +432,26 @@ const BreederProfile = () => {
         status="success"
         setAlert={setSuccessAlert}
       />
+
       <Header authorizedRole="breeder" bg="#F2F2F2" />
+
+      {/* Chat modal */}
+      <Modal
+        isOpen={displayChat}
+        onClose={() => setDisplayChat(false)}
+        size="full"
+      >
+        <ModalContent>
+          <ModalBody p={0}>
+            <ChatPage
+              breederId={user?.sub.split("|").pop() || ""}
+              breederInfo={userMetadata}
+              setDisplayChat={setDisplayChat}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
       <Box
         w="100%"
         px="1.5rem"
@@ -646,7 +665,6 @@ const BreederProfile = () => {
                           p="25px"
                           display="flex"
                           justifyContent="center"
-                          //h="550px"
                         >
                           <VStack>
                             {isUploadingPicture ? (
@@ -688,8 +706,12 @@ const BreederProfile = () => {
                             <Text fontSize={22} fontWeight={500}>
                               {`${userMetadata.first_name} ${userMetadata.last_name}`}
                             </Text>
-                            <Text>Breeder</Text>
-                            {/*<Text>Verified By USA</Text>*/}
+                            <Text opacity={0.7}>Breeder</Text>
+                            <Text opacity={0.7}>{`${
+                              userMetadata.breeder_verified
+                                ? "Verified By Admin"
+                                : "Not Verified"
+                            }`}</Text>
 
                             <HStack mt={2}>
                               <Center className={followerBox}>
@@ -725,6 +747,14 @@ const BreederProfile = () => {
                                 <Icon as={EmailIcon} boxSize="24px" />
                               </Circle>
                               <Text>{userMetadata.email}</Text>
+                            </HStack>
+                            <HStack w="100%" textAlign="left">
+                              <Circle className={profileIcon}>
+                                <BellIcon h="28px" w="28px" color="#FEE8A0" />
+                              </Circle>
+                              <Link onClick={() => setDisplayChat(true)}>
+                                View Messages
+                              </Link>
                             </HStack>
 
                             {/*<Text fontSize={22} fontWeight={500} mt={5}>

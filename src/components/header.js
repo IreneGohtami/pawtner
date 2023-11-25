@@ -8,21 +8,23 @@ import {
   Center,
   Flex,
   Hide,
-  Icon,
+  IconButton,
   Link,
-  Select,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Show,
   Spacer,
   Text,
   Wrap,
 } from "@chakra-ui/react";
+import { HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "@reach/router";
 import { getCookie, deleteCookie } from "../cookie-manager";
 
 import PawtnerLogo from "../images/logo.inline.svg";
-import ArrowUpIcon from "../images/icons/arrow-up.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
-import MenuIcon from "../images/icons/menu.inline.svg";
 
 const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
   const location = useLocation();
@@ -71,14 +73,12 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
       <Spacer />
 
       <Hide below="md">
-        <Wrap justify={{ base: "left", md: "right" }}>
+        <Wrap justify={{ base: "left", md: "right" }} h={headerHeights}>
           <Center h={headerHeights} px="30px">
-            <Select
-              icon={<ArrowUpIcon />}
-              placeholder="ALL ABOUT PUPPY &emsp;"
-              border={0}
-            />
-            <Box display="flex" ml="3rem">
+            <Link href="/dogs" fontWeight={600}>
+              Puppies for Sale
+            </Link>
+            <Box display="flex" ml="2rem">
               <FavoriteIcon
                 cursor="pointer"
                 onClick={() => navigate("/favorites")}
@@ -108,7 +108,7 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
                     href={
                       role.includes("breeder")
                         ? "/account/breeder-profile"
-                        : "/"
+                        : "/account/buyer-profile"
                     }
                   >
                     Account
@@ -132,44 +132,48 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
       </Hide>
       <Show below="md">
         <Center h="70px" pt={1}>
-          <FavoriteIcon />
-          <Select
-            icon={<Icon as={MenuIcon} />}
-            size="sm"
-            width={9}
-            border={0}
-            cursor="pointer"
-          >
-            {!isAuthenticated ? (
-              <option onClick={loginWithRedirect}>Log In</option>
-            ) : (
-              <>
-                {role.includes("admin") && (
-                  <option onClick={() => navigate("/admin")}>
+          <Menu>
+            <MenuButton
+              as={IconButton}
+              aria-label="Options"
+              icon={<HamburgerIcon />}
+              variant="ghost"
+            />
+            <MenuList>
+              {!isAuthenticated ? (
+                <MenuItem onClick={loginWithRedirect}>Log In</MenuItem>
+              ) : (
+                <>
+                  <MenuItem onClick={() => navigate("/admin")}>
                     Admin Panel
-                  </option>
-                )}
-                <option
-                  onClick={() => {
-                    role.includes("breeder")
-                      ? navigate("/account/breeder-profile")
-                      : navigate("/");
-                  }}
-                >
-                  Account
-                </option>
-                <option
-                  onClick={() => {
-                    deleteCookie(`role|${user.email}`);
-                    logout();
-                  }}
-                >
-                  Log Out
-                </option>
-              </>
-            )}
-            <option>ALL ABOUT PUPPY</option>
-          </Select>
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      role.includes("breeder")
+                        ? navigate("/account/breeder-profile")
+                        : navigate("/account/buyer-profile");
+                    }}
+                  >
+                    Account
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      deleteCookie(`role|${user.email}`);
+                      logout();
+                    }}
+                  >
+                    Log Out
+                  </MenuItem>
+                </>
+              )}
+              <MenuItem onClick={() => navigate("/favorites")}>
+                Favorites
+              </MenuItem>
+              <MenuItem onClick={() => navigate("/dogs")}>
+                Puppies for Sale
+              </MenuItem>
+            </MenuList>
+          </Menu>
         </Center>
       </Show>
     </Flex>

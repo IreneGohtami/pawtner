@@ -11,7 +11,12 @@ import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 import { db } from "../../firebase";
 
-import { CloseOutlined, MoreOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  CloseOutlined,
+  MoreOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import {
   AbsoluteCenter,
@@ -58,6 +63,7 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
   const [messageFrom, setMessageFrom] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [displaySenderProfile, setDisplaySenderProfile] = useState(false);
+  const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
     async function fetchConversation() {
@@ -102,7 +108,7 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
       }
     }
     fetchConversation();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, refresh]);
 
   useEffect(() => {
     if (!selectedMessage) {
@@ -348,12 +354,23 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
                 mr={8}
               />
               <MenuList>
-                <MenuItem onClick={() => setDisplaySenderProfile(true)}>
+                <MenuItem
+                  icon={<EyeOutlined />}
+                  onClick={() => setDisplaySenderProfile(true)}
+                >
                   View Contact
                 </MenuItem>
-                <MenuItem onClick={() => setDisplayChat(false)}>
-                  <CloseOutlined />
-                  &nbsp; Close Chat
+                <MenuItem
+                  icon={<ReloadOutlined />}
+                  onClick={() => setRefresh(!refresh)}
+                >
+                  Refresh
+                </MenuItem>
+                <MenuItem
+                  icon={<CloseOutlined />}
+                  onClick={() => setDisplayChat(false)}
+                >
+                  Close
                 </MenuItem>
               </MenuList>
             </Menu>
