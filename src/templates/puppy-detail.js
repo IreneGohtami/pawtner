@@ -8,10 +8,6 @@ import {
   Flex,
   Image,
   Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
@@ -146,18 +142,11 @@ const PuppyDetail = ({ data }) => {
         onClose={() => setDisplayChat(false)}
         size="full"
       >
-        <ModalContent>
-          <ModalHeader bg="gray.200" h={45} w="100%" position="fixed">
-            <ModalCloseButton />
-          </ModalHeader>
-          <ModalBody p={0} mt="45px">
-            <ChatPage
-              breederId={puppy.owner_id.split("|").pop()}
-              breederInfo={breederInfo}
-              setDisplayChat={setDisplayChat}
-            />
-          </ModalBody>
-        </ModalContent>
+        <ChatPage
+          breederId={puppy.owner_id.split("|").pop()}
+          breederInfo={breederInfo}
+          setDisplayChat={setDisplayChat}
+        />
       </Modal>
 
       <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />

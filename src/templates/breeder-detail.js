@@ -19,7 +19,6 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalContent,
-  ModalHeader,
   ModalOverlay,
   Spacer,
   Tab,
@@ -110,18 +109,11 @@ const BreedersPage = ({ pageContext, data }) => {
         onClose={() => setDisplayChat(false)}
         size="full"
       >
-        <ModalContent>
-          <ModalHeader bg="gray.200" h={45} w="100%" position="fixed">
-            <ModalCloseButton />
-          </ModalHeader>
-          <ModalBody p={0} mt="45px">
-            <ChatPage
-              breederId={userId.split("|").pop()}
-              breederInfo={breederInfo}
-              setDisplayChat={setDisplayChat}
-            />
-          </ModalBody>
-        </ModalContent>
+        <ChatPage
+          breederId={userId.split("|").pop()}
+          breederInfo={breederInfo}
+          setDisplayChat={setDisplayChat}
+        />
       </Modal>
       <Box bg="#F9F9F9" fontFamily="Poppins !important">
         <Toast

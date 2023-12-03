@@ -16,10 +16,6 @@ import {
   MenuItem,
   MenuList,
   Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
   Show,
   Spacer,
   Text,
@@ -89,23 +85,10 @@ const Header = ({
 
       {/* Chat modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="full">
-        <ModalContent>
-          <ModalHeader
-            bg="gray.200"
-            h={45}
-            w="100%"
-            position="fixed"
-            zIndex={2}
-          >
-            <ModalCloseButton />
-          </ModalHeader>
-          <ModalBody p={0} mt="45px">
-            <ChatPage
-              breederId={user?.sub.split("|").pop() || ""}
-              breederInfo={userMetadata || {}}
-            />
-          </ModalBody>
-        </ModalContent>
+        <ChatPage
+          breederId={user?.sub.split("|").pop() || ""}
+          breederInfo={userMetadata || {}}
+        />
       </Modal>
 
       <Hide below="md">
