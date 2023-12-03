@@ -1,6 +1,7 @@
 import axios from "axios";
 import { graphql, navigate } from "gatsby";
 import React, { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   StarFilled,
   CheckCircleTwoTone,
@@ -18,6 +19,7 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalContent,
+  ModalHeader,
   ModalOverlay,
   Spacer,
   Tab,
@@ -65,6 +67,7 @@ const BreedersPage = ({ pageContext, data }) => {
   const [viewImageUrl, setViewImageUrl] = useState(null);
   const [displayChat, setDisplayChat] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { user } = useAuth0();
 
   useEffect(() => {
     async function fetchBreederInfo() {
@@ -108,7 +111,10 @@ const BreedersPage = ({ pageContext, data }) => {
         size="full"
       >
         <ModalContent>
-          <ModalBody p={0}>
+          <ModalHeader bg="gray.200" h={45} w="100%" position="fixed">
+            <ModalCloseButton />
+          </ModalHeader>
+          <ModalBody p={0} mt="45px">
             <ChatPage
               breederId={userId.split("|").pop()}
               breederInfo={breederInfo}
@@ -181,7 +187,12 @@ const BreedersPage = ({ pageContext, data }) => {
                       <Button bg="primary" colorScheme="yellow">
                         Book showing
                       </Button>
-                      <Button bg="primary" colorScheme="yellow" mx={3}>
+                      <Button
+                        bg="primary"
+                        colorScheme="yellow"
+                        mx={3}
+                        isDisabled={userId === user?.sub}
+                      >
                         Application
                       </Button>
                       <Button
@@ -189,7 +200,7 @@ const BreedersPage = ({ pageContext, data }) => {
                         colorScheme="yellow"
                         onClick={() => setDisplayChat(true)}
                       >
-                        Connect
+                        {userId === user?.sub ? "My Messages" : "Connect"}
                       </Button>
                     </Box>
                   </Flex>

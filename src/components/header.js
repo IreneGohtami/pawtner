@@ -6,6 +6,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import {
   Box,
   Center,
+  Circle,
   Flex,
   Hide,
   IconButton,
@@ -14,26 +15,40 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
   Show,
   Spacer,
   Text,
   Wrap,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { HamburgerIcon } from "@chakra-ui/icons";
+import { BellIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "@reach/router";
 import { getCookie, deleteCookie } from "../cookie-manager";
 
+import ChatPage from "../components/chat";
 import PawtnerLogo from "../images/logo.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
 
-const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
+const Header = ({
+  authorizedRole,
+  openSelectOptionModal,
+  bg,
+  userMetadata,
+}) => {
   const location = useLocation();
   const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [role, setRole] = useState([]);
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
   const isProfilePage = location.pathname === "/account/breeder-profile/";
   const isAdminPage = location.pathname === "/admin/";
+  const isAccountPage = location.pathname.startsWith("/account/");
 
   useEffect(() => {
     if (user) {
@@ -72,22 +87,62 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
 
       <Spacer />
 
+      {/* Chat modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="full">
+        <ModalContent>
+          <ModalHeader
+            bg="gray.200"
+            h={45}
+            w="100%"
+            position="fixed"
+            zIndex={2}
+          >
+            <ModalCloseButton />
+          </ModalHeader>
+          <ModalBody p={0} mt="45px">
+            <ChatPage
+              breederId={user?.sub.split("|").pop() || ""}
+              breederInfo={userMetadata || {}}
+            />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
       <Hide below="md">
         <Wrap justify={{ base: "left", md: "right" }} h={headerHeights}>
           <Center h={headerHeights} px="30px">
-            <Link href="/dogs" fontWeight={600}>
-              Puppies for Sale
-            </Link>
-            <Box display="flex" ml="2rem">
-              <FavoriteIcon
+            {isAccountPage ? (
+              <Circle
+                bg="white"
+                border="0 !important"
+                w="49px"
+                h="49px"
                 cursor="pointer"
-                onClick={() => navigate("/favorites")}
-              />
-            </Box>
+                onClick={onOpen}
+              >
+                <BellIcon h="28px" w="28px" />
+              </Circle>
+            ) : (
+              <>
+                <Link href="/dogs" fontWeight={600}>
+                  Puppies for Sale
+                </Link>
+                <Box display="flex" ml="2rem">
+                  <FavoriteIcon
+                    cursor="pointer"
+                    onClick={() => navigate("/favorites")}
+                  />
+                </Box>
+              </>
+            )}
           </Center>
         </Wrap>
         <Wrap>
-          <Center h={headerHeights} borderLeft="1px" borderColor="gray.200">
+          <Center
+            h={headerHeights}
+            borderLeft={isAccountPage ? 0 : "1px"}
+            borderColor="gray.200"
+          >
             {!isAuthenticated ? (
               <Text fontWeight={600} mx="30px">
                 <Link href="#" onClick={loginWithRedirect}>
@@ -156,6 +211,7 @@ const Header = ({ authorizedRole, openSelectOptionModal, bg }) => {
                   >
                     Account
                   </MenuItem>
+                  <MenuItem onClick={onOpen}>My Messages</MenuItem>
                   <MenuItem
                     onClick={() => {
                       deleteCookie(`role|${user.email}`);

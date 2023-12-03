@@ -39,6 +39,7 @@ import {
   VStack,
   HStack,
 } from "@chakra-ui/react";
+import { useBreakpointValue } from "@chakra-ui/media-query";
 
 import theme from "../../theme";
 import Seo from "../../components/seo";
@@ -53,7 +54,7 @@ import {
   unreadMsgCount,
 } from "./chat.module.css";
 
-const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
+const ChatPage = ({ breederId, breederInfo }) => {
   const { isAuthenticated, user } = useAuth0();
   const containerRef = useRef(null);
   const [userId, setUserId] = useState(null);
@@ -63,52 +64,24 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
   const [messageFrom, setMessageFrom] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [displaySenderProfile, setDisplaySenderProfile] = useState(false);
-  const [refresh, setRefresh] = useState(false);
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isIndividualMessageVisible, setIsIndividualMessageVisible] =
+    useState("none");
+  const [isChatListVisible, setIsChatListVisible] = useState("flex");
 
   useEffect(() => {
-    async function fetchConversation() {
-      if (isAuthenticated && user) {
-        setIsLoading(true);
-        const _userId = user.sub.split("|")[1];
-        setUserId(_userId);
-        try {
-          // Filter query based on participants user_id
-          const q = query(
-            collection(db, "chat_history"),
-            where("participants.user_ids", "array-contains-any", [_userId])
-          );
-          const querySnapshot = await getDocs(q);
-
-          const data = [];
-          querySnapshot.forEach((doc) => {
-            data.push({ ...doc.data(), id: doc.id });
-          });
-
-          setMessageList(data);
-
-          if (breederId && breederInfo) {
-            const messageIdx = data.findIndex(
-              (_message) =>
-                _message.participants.user_ids.includes(breederId) &&
-                _message.participants.user_ids.includes(_userId)
-            );
-            if (messageIdx !== -1) {
-              setSelectedMessage(data[messageIdx]);
-            } else {
-              // Start a new chat
-              await startNewChat(_userId);
-            }
-          } else {
-            setSelectedMessage(data.length ? data[0] : null);
-          }
-        } catch (error) {
-          console.log(error, "error fetching conversation");
-        }
-        setIsLoading(false);
-      }
+    if (isMobile) {
+      setIsIndividualMessageVisible("none");
+      setIsChatListVisible("flex");
+    } else {
+      setIsIndividualMessageVisible("flex");
+      setIsChatListVisible("flex");
     }
+  }, [isMobile]);
+
+  useEffect(() => {
     fetchConversation();
-  }, [isAuthenticated, user, refresh]);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (!selectedMessage) {
@@ -154,6 +127,48 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
       containerRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [containerRef.current, messageToSend]);
+
+  const fetchConversation = async (selectedMessage = null) => {
+    if (isAuthenticated && user) {
+      setIsLoading(true);
+      const _userId = user.sub.split("|")[1];
+      setUserId(_userId);
+      try {
+        // Filter query based on participants user_id
+        const q = query(
+          collection(db, "chat_history"),
+          where("participants.user_ids", "array-contains-any", [_userId])
+        );
+        const querySnapshot = await getDocs(q);
+
+        const data = [];
+        querySnapshot.forEach((doc) => {
+          data.push({ ...doc.data(), id: doc.id });
+        });
+
+        setMessageList(data);
+
+        if (breederId && breederInfo) {
+          const messageIdx = data.findIndex(
+            (_message) =>
+              _message.participants.user_ids.includes(breederId) &&
+              _message.participants.user_ids.includes(_userId)
+          );
+          if (messageIdx !== -1) {
+            setSelectedMessage(selectedMessage || data[messageIdx]);
+          } else {
+            // Start a new chat
+            await startNewChat(_userId);
+          }
+        } else {
+          setSelectedMessage(selectedMessage || (data.length ? data[0] : null));
+        }
+      } catch (error) {
+        console.log(error, "error fetching conversation");
+      }
+      setIsLoading(false);
+    }
+  };
 
   const updateReadStatus = async (messagesObj) => {
     const docRef = doc(db, "chat_history", selectedMessage.id);
@@ -225,8 +240,23 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
 
   return (
     <ChakraProvider theme={theme}>
-      <Flex w="100%" h="100vh" bg="white" fontFamily="Poppins !important">
-        <VStack borderRight="1px solid #E2E8F0" gap={0} pt={3} width="383px">
+      <Flex
+        w="100%"
+        h="100vh"
+        bg="white"
+        fontFamily="Poppins !important"
+        direction={{ base: "column", md: "row" }}
+      >
+        <VStack
+          borderRight="1px solid #E2E8F0"
+          gap={0}
+          pt={3}
+          w="383px"
+          h="100vh"
+          position="fixed"
+          bg="white"
+          display={isChatListVisible}
+        >
           <Text fontSize={20} fontWeight={500} py={1} pl={5} alignSelf="normal">
             Messages
           </Text>
@@ -262,15 +292,19 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
               return (
                 <Box
                   key={message.id}
-                  w="383px"
                   h="100px"
                   pl="20px"
+                  mr="-2px"
                   borderBottom="1px solid #E2E8F0"
                   cursor="pointer"
                   bg={message.id === selectedMessage.id ? "#f2f1f4" : "white"}
                   onClick={() => {
                     setSelectedMessage(message);
                     setDisplaySenderProfile(false);
+                    setIsIndividualMessageVisible("flex");
+                    if (isMobile) {
+                      setIsChatListVisible("none");
+                    }
                   }}
                 >
                   <Flex h="100px" alignItems="center">
@@ -333,8 +367,22 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
           )}
         </VStack>
 
-        <VStack flex="1" alignItems="normal">
-          <HStack pl={10} py={4} borderBottom="1px solid #E2E8F0">
+        <VStack
+          flex="1"
+          alignItems="normal"
+          w="100%"
+          ml={isMobile ? 0 : "383px"}
+          display={isIndividualMessageVisible}
+        >
+          <HStack
+            pl={10}
+            py={4}
+            borderBottom="1px solid #E2E8F0"
+            position="fixed !important"
+            w="100%"
+            bg="white"
+            zIndex={1}
+          >
             <Image
               src={messageFrom.avatar || "/default-user-img.png"}
               border={messageFrom.avatar ? "none" : "1px solid #ccc"}
@@ -352,6 +400,8 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
                 variant="ghost"
                 fontSize={24}
                 mr={8}
+                pos="fixed"
+                right={0}
               />
               <MenuList>
                 <MenuItem
@@ -362,15 +412,9 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
                 </MenuItem>
                 <MenuItem
                   icon={<ReloadOutlined />}
-                  onClick={() => setRefresh(!refresh)}
+                  onClick={() => fetchConversation(selectedMessage)}
                 >
                   Refresh
-                </MenuItem>
-                <MenuItem
-                  icon={<CloseOutlined />}
-                  onClick={() => setDisplayChat(false)}
-                >
-                  Close
                 </MenuItem>
               </MenuList>
             </Menu>
@@ -379,7 +423,7 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
             w="100%"
             h="100vh"
             bg="#f2f1f4"
-            mt="-8px"
+            mt="88px"
             p={5}
             overflowY="scroll"
           >
@@ -448,7 +492,7 @@ const ChatPage = ({ breederId, breederInfo, setDisplayChat }) => {
               </>
             )}
           </VStack>
-          <HStack h={63} bg="white">
+          <HStack h={63} mt="-8px" bg="white">
             <InputGroup mt="-8px" marginRight={15}>
               <Input
                 placeholder="Write a message ..."

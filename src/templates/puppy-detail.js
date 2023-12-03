@@ -9,7 +9,9 @@ import {
   Image,
   Modal,
   ModalBody,
+  ModalCloseButton,
   ModalContent,
+  ModalHeader,
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
@@ -145,7 +147,10 @@ const PuppyDetail = ({ data }) => {
         size="full"
       >
         <ModalContent>
-          <ModalBody p={0}>
+          <ModalHeader bg="gray.200" h={45} w="100%" position="fixed">
+            <ModalCloseButton />
+          </ModalHeader>
+          <ModalBody p={0} mt="45px">
             <ChatPage
               breederId={puppy.owner_id.split("|").pop()}
               breederInfo={breederInfo}
@@ -221,6 +226,7 @@ const PuppyDetail = ({ data }) => {
               className={button}
               mt={8}
               onClick={() => setDisplayChat(true)}
+              isDisabled={puppy.owner_id === user?.sub}
             >
               Contact Breeder
             </Button>

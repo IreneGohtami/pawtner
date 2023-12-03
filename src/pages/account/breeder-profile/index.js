@@ -34,10 +34,6 @@ import {
   Icon,
   Image,
   Input,
-  Link,
-  Modal,
-  ModalBody,
-  ModalContent,
   Select,
   Stack,
   Text,
@@ -46,9 +42,7 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import { BellIcon } from "@chakra-ui/icons";
 
-import ChatPage from "../../../components/chat";
 import Header from "../../../components/header";
 import Seo from "../../../components/seo";
 import CustomSpinner from "../../../components/spinner";
@@ -107,7 +101,6 @@ const BreederProfile = () => {
   const [modalData, setModalData] = useState({});
   const [documents, setDocuments] = useState([]);
   const [documentUploadError, setDocumentUploadError] = useState(null);
-  const [displayChat, setDisplayChat] = useState(false);
 
   useEffect(() => {
     const names = user.name.split(" ");
@@ -433,24 +426,11 @@ const BreederProfile = () => {
         setAlert={setSuccessAlert}
       />
 
-      <Header authorizedRole="breeder" bg="#F2F2F2" />
-
-      {/* Chat modal */}
-      <Modal
-        isOpen={displayChat}
-        onClose={() => setDisplayChat(false)}
-        size="full"
-      >
-        <ModalContent>
-          <ModalBody p={0}>
-            <ChatPage
-              breederId={user?.sub.split("|").pop() || ""}
-              breederInfo={userMetadata}
-              setDisplayChat={setDisplayChat}
-            />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <Header
+        authorizedRole="breeder"
+        bg="#F2F2F2"
+        userMetadata={userMetadata}
+      />
 
       <Box
         w="100%"
@@ -461,7 +441,7 @@ const BreederProfile = () => {
       >
         {!isFormLoading && (
           <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
-            <AccordionItem>
+            <AccordionItem border="0 !important">
               <AccordionButton>
                 <AccordionIcon fontSize={30} />
                 <Text fontSize={28} fontWeight={600}>
@@ -747,14 +727,6 @@ const BreederProfile = () => {
                                 <Icon as={EmailIcon} boxSize="24px" />
                               </Circle>
                               <Text>{userMetadata.email}</Text>
-                            </HStack>
-                            <HStack w="100%" textAlign="left">
-                              <Circle className={profileIcon}>
-                                <BellIcon h="28px" w="28px" color="#FEE8A0" />
-                              </Circle>
-                              <Link onClick={() => setDisplayChat(true)}>
-                                View Messages
-                              </Link>
                             </HStack>
 
                             {/*<Text fontSize={22} fontWeight={500} mt={5}>

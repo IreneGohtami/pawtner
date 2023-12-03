@@ -1,10 +1,5 @@
 import axios from "axios";
-import {
-  getDownloadURL,
-  ref,
-  uploadBytes,
-  deleteObject,
-} from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Field, Form, Formik } from "formik";
 import countries from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
@@ -32,10 +27,6 @@ import {
   Icon,
   Image,
   Input,
-  Link,
-  Modal,
-  ModalBody,
-  ModalContent,
   Select,
   Stack,
   Text,
@@ -43,9 +34,7 @@ import {
   Spacer,
   VStack,
 } from "@chakra-ui/react";
-import { BellIcon } from "@chakra-ui/icons";
 
-import ChatPage from "../../../components/chat";
 import Header from "../../../components/header";
 import Seo from "../../../components/seo";
 import CustomSpinner from "../../../components/spinner";
@@ -96,9 +85,6 @@ const BuyerProfile = () => {
   const [onPictureHover, setOnPictureHover] = useState(false);
   const [errorAlert, setErrorAlert] = useState(null);
   const [successAlert, setSuccessAlert] = useState(null);
-  const [documents, setDocuments] = useState([]);
-  const [documentUploadError, setDocumentUploadError] = useState(null);
-  const [displayChat, setDisplayChat] = useState(false);
 
   useEffect(() => {
     const names = user.name.split(" ");
@@ -123,7 +109,6 @@ const BuyerProfile = () => {
               }
         );
         setOriginalMetadata(data.user_metadata);
-        setDocuments(data.user_metadata?.documents || []);
         setConnection(data.identities[0].connection);
         setErrorAlert(null);
       } catch (error) {
@@ -232,27 +217,6 @@ const BuyerProfile = () => {
     setIsUploadingPicture(false);
   };
 
-  const updateUserDocuments = async (documents) => {
-    try {
-      await axios.post("/api/auth0", {
-        action: "update_user_metadata",
-        userId: user.sub,
-        connection,
-        payload: {
-          user_metadata: {
-            documents,
-          },
-        },
-      });
-      setUserMetadata({ ...userMetadata, documents });
-      setOriginalMetadata(userMetadata);
-      setErrorAlert(null);
-    } catch (e) {
-      setErrorAlert(e?.response?.data || e.message);
-    }
-    setIsUploadingPicture(false);
-  };
-
   const validatePassword = (value) => {
     if (!value) {
       return "";
@@ -281,24 +245,16 @@ const BuyerProfile = () => {
     fileInputRef.current.click();
   };
 
-  const validateImage = (file, type = "profile") => {
+  const validateImage = (file) => {
     const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
       const errMsg = "You can only upload JPG/PNG file";
-      if (type === "profile") {
-        setErrorAlert(errMsg);
-      } else {
-        setDocumentUploadError(errMsg);
-      }
+      setErrorAlert(errMsg);
     }
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
       const errMsg = "Image must be smaller than 2MB";
-      if (type === "profile") {
-        setErrorAlert(errMsg);
-      } else {
-        setDocumentUploadError(errMsg);
-      }
+      setErrorAlert(errMsg);
     }
     return isJpgOrPng && isLt2M;
   };
@@ -327,85 +283,6 @@ const BuyerProfile = () => {
     }
   };
 
-  const handleDocumentChange = async (event) => {
-    const { file, fileList } = event;
-    const { status } = file;
-    const userId = user ? user.sub.split("|")[1] : "";
-
-    if (status === "removed") {
-      const newDocuments = documents.filter(
-        (document) => document.uid !== file.uid
-      );
-      setDocuments(newDocuments);
-
-      // delete from storage if exists in userMetadata.documents
-      if (
-        userMetadata.documents.find(
-          (document) => document.reference === file.reference
-        )
-      ) {
-        try {
-          const storageRef = ref(
-            storage,
-            `users/${userId}/documents/certificates/${file.name}`
-          );
-          await deleteObject(storageRef);
-        } catch (error) {
-          console.log("Error deleting document:", error);
-        }
-
-        // update user.metadata.documents
-        const newDocumentList = userMetadata.documents.filter(
-          (document) => document.reference !== file.reference
-        );
-        await updateUserDocuments(newDocumentList);
-      }
-    } else if (file) {
-      if (!status) {
-        // no status means it failed validateImage validation
-        fileList[fileList.length - 1].status = "error";
-        fileList[fileList.length - 1].error = {};
-        fileList[fileList.length - 1].error.message = documentUploadError;
-      }
-
-      setDocuments(fileList);
-    }
-  };
-
-  const uploadDocument = async (event) => {
-    const { file } = event;
-    const userId = user ? user.sub.split("|")[1] : "";
-
-    // upload directly to storage
-    const storageRef = ref(
-      storage,
-      `users/${userId}/documents/certificates/${file.name}`
-    );
-    try {
-      const snapshot = await uploadBytes(storageRef, file);
-      const imageUrl = await getDownloadURL(snapshot.ref);
-
-      // update user.metadata.documents
-      await updateUserDocuments([
-        ...userMetadata.documents,
-        {
-          reference: file.uid,
-          name: snapshot.ref.name,
-          url: imageUrl,
-          status: "done",
-        },
-      ]);
-
-      setDocumentUploadError(null);
-    } catch (error) {
-      setDocumentUploadError("Error uploading document. Please try again.");
-    }
-
-    documents[documents.length - 1].percent = 100;
-    documents[documents.length - 1].status = "done";
-    setDocuments(documents);
-  };
-
   countries.registerLocale(en);
   const countryObj = countries.getNames("en", { select: "official" });
   const countryArr = Object.entries(countryObj).map(([key, value]) => {
@@ -424,24 +301,7 @@ const BuyerProfile = () => {
         setAlert={setSuccessAlert}
       />
 
-      <Header authorizedRole="buyer" bg="#F2F2F2" />
-
-      {/* Chat modal */}
-      <Modal
-        isOpen={displayChat}
-        onClose={() => setDisplayChat(false)}
-        size="full"
-      >
-        <ModalContent>
-          <ModalBody p={0}>
-            <ChatPage
-              breederId={user?.sub.split("|").pop() || ""}
-              breederInfo={userMetadata}
-              setDisplayChat={setDisplayChat}
-            />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <Header authorizedRole="buyer" bg="#F2F2F2" userMetadata={userMetadata} />
 
       <Box
         w="100%"
@@ -452,7 +312,7 @@ const BuyerProfile = () => {
       >
         {!isFormLoading && (
           <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
-            <AccordionItem>
+            <AccordionItem border="0 !important">
               <AccordionButton>
                 <AccordionIcon fontSize={30} />
                 <Text fontSize={28} fontWeight={600}>
@@ -729,18 +589,6 @@ const BuyerProfile = () => {
                               </Circle>
                               <Text>{userMetadata.email}</Text>
                             </HStack>
-                            <HStack w="100%" textAlign="left">
-                              <Circle className={profileIcon}>
-                                <BellIcon h="28px" w="28px" color="#FEE8A0" />
-                              </Circle>
-                              <Link onClick={() => setDisplayChat(true)}>
-                                View Messages
-                              </Link>
-                            </HStack>
-
-                            {/*<Text fontSize={22} fontWeight={500} mt={5}>
-                                Breeder Performance
-                              </Text>*/}
                           </VStack>
                         </Box>
                       </Flex>
@@ -756,6 +604,6 @@ const BuyerProfile = () => {
   );
 };
 
-export const Head = () => <Seo title="Breeder Profile" />;
+export const Head = () => <Seo title="Buyer Profile" />;
 
 export default withAuthenticationRequired(BuyerProfile);
