@@ -216,14 +216,14 @@ const ChatPage = ({ breederId, breederInfo }) => {
         user_ids: [_userId, breederId],
         user_details: [
           {
-            name: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`,
-            avatar: user.user_metadata.profile_picture,
-            phone_number: user.user_metadata.phone_number,
+            name: `${user.user_metadata.first_name} ${user.user_metadata.last_name}`.trim(),
+            avatar: user.user_metadata.profile_picture || "",
+            phone_number: user.user_metadata.phone_number || "",
           },
           {
-            name: `${breederInfo.first_name} ${breederInfo.last_name}`,
-            avatar: breederInfo.profile_picture,
-            phone_number: breederInfo.phone,
+            name: `${breederInfo.first_name} ${breederInfo.last_name}`.trim(),
+            avatar: breederInfo.profile_picture || "",
+            phone_number: breederInfo.phone || "",
           },
         ],
       },

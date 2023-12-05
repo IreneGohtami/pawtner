@@ -1,11 +1,13 @@
 import axios from "axios";
 import { graphql, navigate } from "gatsby";
+import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   StarFilled,
   CheckCircleTwoTone,
   CloseCircleTwoTone,
+  PlusOutlined,
 } from "@ant-design/icons";
 import {
   Box,
@@ -27,9 +29,12 @@ import {
   TabPanel,
   TabPanels,
   Text,
+  Textarea,
   VStack,
   useDisclosure,
+  HStack,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
 
 import ChatPage from "../components/chat";
 import Header from "../components/header";
@@ -58,6 +63,7 @@ const BreedersPage = ({ pageContext, data }) => {
     following: 0,
     followers: 0,
     documents: [],
+    reviews: [],
   };
 
   const [breederInfo, setBreederInfo] = useState(defaultMetadata);
@@ -65,6 +71,11 @@ const BreedersPage = ({ pageContext, data }) => {
   const [errorAlert, setErrorAlert] = useState(null);
   const [viewImageUrl, setViewImageUrl] = useState(null);
   const [displayChat, setDisplayChat] = useState(false);
+  const [showReviewInput, setShowReviewInput] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [inputReview, setInputReview] = useState("");
+  const [inputRating, setInputRating] = useState(0);
+  const [hoveredStars, setHoveredStars] = useState(0);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user } = useAuth0();
 
@@ -88,6 +99,53 @@ const BreedersPage = ({ pageContext, data }) => {
   const viewImage = (url) => {
     setViewImageUrl(url);
     onOpen();
+  };
+
+  const certCount = puppyList.reduce((count, puppy) => {
+    return (
+      count +
+      (puppy.certificates
+        ? puppy.certificates.filter((certificate) => certificate.url).length
+        : 0)
+    );
+  }, 0);
+
+  const submitReview = async () => {
+    try {
+      setIsSubmittingReview(true);
+
+      const updatedReviews = [
+        ...breederInfo.reviews,
+        {
+          from: user.sub,
+          content: inputReview,
+          rating: inputRating,
+          date: new Date().toISOString(),
+        },
+      ];
+
+      await axios.post("/api/auth0", {
+        action: "update_user_metadata",
+        userId,
+        connection: null,
+        payload: {
+          user_metadata: {
+            reviews: updatedReviews,
+          },
+        },
+      });
+
+      setBreederInfo((prev) => ({
+        ...prev,
+        reviews: updatedReviews,
+      }));
+      setShowReviewInput(false);
+      setInputReview("");
+      setInputRating(0);
+    } catch (error) {
+      setErrorAlert(error?.response?.data || error.message);
+    }
+    setIsSubmittingReview(false);
   };
 
   return (
@@ -290,10 +348,114 @@ const BreedersPage = ({ pageContext, data }) => {
                                 )
                             )
                           )}
+                          {!certCount && <Text>No documents uploaded</Text>}
                         </Flex>
                       </TabPanel>
                       <TabPanel>
-                        <p>Coming soon!</p>
+                        {!breederInfo?.reviews?.length && (
+                          <Text mb={3}>No reviews yet</Text>
+                        )}
+                        {breederInfo?.reviews?.map((review) => (
+                          <Box
+                            key={review.date}
+                            borderRadius={10}
+                            bg="#F9F9F9"
+                            py="10px"
+                            px="20px"
+                            mb={3}
+                          >
+                            <Text whiteSpace="pre">{review.content}</Text>
+                            <Box textAlign="right" mt="-10px">
+                              {[1, 2, 3, 4, 5].map((num) => (
+                                <StarIcon
+                                  key={num}
+                                  h="18px"
+                                  w="18px"
+                                  color={
+                                    review.rating >= num
+                                      ? "primary"
+                                      : "gray.300"
+                                  }
+                                />
+                              ))}
+                            </Box>
+                            <Text fontSize={12} mt={1} textAlign="right">
+                              {moment(review.date).format(" DD MMM, YYYY")}
+                            </Text>
+                          </Box>
+                        ))}
+                        {userId !== user?.sub && (
+                          <Button
+                            bg="primary"
+                            colorScheme="yellow"
+                            leftIcon={<PlusOutlined />}
+                            isDisabled={userId === user?.sub}
+                            onClick={() => setShowReviewInput(true)}
+                          >
+                            Add a Review
+                          </Button>
+                        )}
+
+                        {showReviewInput && (
+                          <>
+                            <Textarea
+                              name="review"
+                              mt={3}
+                              focusBorderColor="primary"
+                              placeholder="Write something about this breeder"
+                              value={inputReview}
+                              onChange={(e) => setInputReview(e.target.value)}
+                            />
+                            <HStack>
+                              <Text>Rating</Text>
+                              <Box>
+                                {[1, 2, 3, 4, 5].map((num) => (
+                                  <StarIcon
+                                    key={num}
+                                    h="18px"
+                                    w="18px"
+                                    cursor="pointer"
+                                    color={
+                                      !inputRating
+                                        ? hoveredStars >= num
+                                          ? "primary"
+                                          : "gray.300"
+                                        : inputRating >= num
+                                        ? "primary"
+                                        : "gray.300"
+                                    }
+                                    _hover={{ color: "primary" }}
+                                    onMouseOver={() => setHoveredStars(num)}
+                                    onMouseOut={() => setHoveredStars(0)}
+                                    onClick={() => setInputRating(num)}
+                                  />
+                                ))}
+                              </Box>
+                              <Spacer />
+                              <Box float="right">
+                                <Button
+                                  mr={1}
+                                  isDisabled={isSubmittingReview}
+                                  onClick={() => {
+                                    setShowReviewInput(false);
+                                    setInputReview("");
+                                    setInputRating(0);
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  bg="primary"
+                                  colorScheme="yellow"
+                                  isLoading={isSubmittingReview}
+                                  onClick={submitReview}
+                                >
+                                  Submit
+                                </Button>
+                              </Box>
+                            </HStack>
+                          </>
+                        )}
                       </TabPanel>
                       <TabPanel>
                         <Text>{breederInfo.about_me}</Text>
