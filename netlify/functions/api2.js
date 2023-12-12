@@ -68,8 +68,7 @@ router.post("/webhook", async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
   } catch (err) {
-    res.status(400).send(`Webhook Error: ${err.message}`);
-    return;
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   // Handle the event
@@ -79,8 +78,9 @@ router.post("/webhook", async (req, res) => {
 
       const { client_reference_id: clientReferenceId } = data;
       if (!clientReferenceId) {
-        console.log("client_reference_id is missing");
-        return;
+        return res
+          .status(400)
+          .send(`Webhook Error: client_reference_id is missing`);
       }
 
       let [animalId, userId] = clientReferenceId.split(/_(.+)/, 2);
@@ -104,15 +104,14 @@ router.post("/webhook", async (req, res) => {
           created: data.created,
         });
       } catch (err) {
-        console.log(err, "error updating puppy status");
+        return res.status(400).send(`Webhook Error: ${err.message}`);
       }
-
-      res.status(200).send(`Event "${event.type}" successfully processed`);
       break;
     default:
-      console.log(`Unhandled event type ${event.type}`);
-      break;
+      return res.status(400).send(`Unhandled event type ${event.type}`);
   }
+
+  return res.status(200).send(`Event "${event.type}" successfully processed`);
 });
 
 export const handler = serverless(app);
