@@ -41,6 +41,8 @@ const router = Router();
 
 app.use("/api2/", router);
 
+router.get("/hello", (req, res) => res.send("Hello World!")); // Test API
+
 router.post("/webhook", async (req, res) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
     appInfo: {

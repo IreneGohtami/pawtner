@@ -8,12 +8,11 @@
     "pawtner, pet, breeder, dog, cat"
   ],
   "scripts": {
-    "develop": "gatsby develop",
+    "develop": "gatsby clean && netlify dev",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "clean": "gatsby clean",
-    "server": "NODE_ENV=development nodemon --exec babel-node ./netlify/functions/api2.js"
+    "clean": "gatsby clean"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.0",
@@ -28,15 +27,16 @@
     "cors": "^2.8.5",
     "deepmerge": "^4.3.1",
     "dotenv": "^16.3.1",
+    "emitter": "^0.0.5",
     "express": "^4.18.2",
     "firebase": "^10.1.0",
     "formik": "^2.4.2",
     "gatsby": "^5.11.0",
     "gatsby-omni-font-loader": "^2.0.2",
     "gatsby-plugin-image": "^3.11.0",
-    "gatsby-plugin-manifest": "^5.11.0",
+    "gatsby-plugin-manifest": "^5.12.3",
     "gatsby-plugin-react-svg": "^3.3.0",
-    "gatsby-plugin-sharp": "^5.11.0",
+    "gatsby-plugin-sharp": "^5.12.3",
     "gatsby-source-filesystem": "^5.12.0",
     "gatsby-source-firestore-easy": "^1.1.0",
     "gatsby-transformer-sharp": "^5.11.0",
@@ -48,12 +48,9 @@
     "react-datepicker": "^4.16.0",
     "react-dom": "^18.2.0",
     "serverless-http": "^3.2.0",
+    "stream-browserify": "^3.0.0",
     "stripe": "^14.8.0",
-    "uid": "^2.0.2"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.23.5",
-    "@babel/node": "^7.22.19",
-    "@babel/preset-env": "^7.23.5"
+    "uid": "^2.0.2",
+    "util": "^0.12.5"
   }
 }
