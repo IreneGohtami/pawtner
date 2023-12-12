@@ -8,7 +8,6 @@ import {
 import { Field, Form, Formik } from "formik";
 import countries from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
-import { isEmpty } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 
 import { Upload } from "antd";
@@ -114,7 +113,7 @@ const BreederProfile = () => {
         );
 
         setUserMetadata(
-          !isEmpty(data.user_metadata)
+          data?.user_metadata?.first_name
             ? { ...data.user_metadata, password: "", retype_password: "" }
             : {
                 ...defaultMetadata,

@@ -12,9 +12,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { db } from "../../firebase";
 
 import {
-  EyeOutlined,
+  //EyeOutlined,
   CloseOutlined,
-  MoreOutlined,
+  //MoreOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
@@ -30,10 +30,10 @@ import {
   InputGroup,
   InputRightElement,
   Image,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
+  //Menu,
+  //MenuButton,
+  //MenuList,
+  //MenuItem,
   ModalBody,
   ModalCloseButton,
   ModalContent,
@@ -176,8 +176,12 @@ const ChatPage = ({ breederId, breederInfo }) => {
   };
 
   const updateReadStatus = async (messagesObj) => {
-    const docRef = doc(db, "chat_history", selectedMessage.id);
-    await updateDoc(docRef, messagesObj).then();
+    try {
+      const docRef = doc(db, "chat_history", selectedMessage.id);
+      await updateDoc(docRef, messagesObj);
+    } catch (error) {
+      console.log(error, "error updating read status");
+    }
   };
 
   const sendMessage = async () => {
@@ -205,9 +209,13 @@ const ChatPage = ({ breederId, breederInfo }) => {
     setMessageList(messageList);
     setMessageToSend("");
 
-    // Update messages in DB
-    const docRef = doc(db, "chat_history", selectedMessage.id);
-    await updateDoc(docRef, messagesObj);
+    try {
+      // Update messages in DB
+      const docRef = doc(db, "chat_history", selectedMessage.id);
+      await updateDoc(docRef, messagesObj);
+    } catch (error) {
+      console.log(error, "error updating messages");
+    }
   };
 
   const startNewChat = async (_userId) => {
@@ -430,7 +438,17 @@ const ChatPage = ({ breederId, breederInfo }) => {
                   {messageFrom.name}
                 </Text>
                 <Spacer />
-                <Menu>
+                <IconButton
+                  icon={<ReloadOutlined />}
+                  fontSize="22px"
+                  colorScheme="transparent"
+                  color="inherit"
+                  mr={8}
+                  pos="fixed"
+                  right={0}
+                  onClick={() => fetchConversation(selectedMessage)}
+                />
+                {/*<Menu>
                   <MenuButton
                     as={IconButton}
                     icon={<MoreOutlined />}
@@ -459,7 +477,7 @@ const ChatPage = ({ breederId, breederInfo }) => {
                       Refresh
                     </MenuItem>
                   </MenuList>
-                </Menu>
+                </Menu>*/}
               </HStack>
               <VStack
                 w="100%"

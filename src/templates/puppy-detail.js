@@ -10,6 +10,7 @@ import {
   Modal,
   SimpleGrid,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { graphql, navigate } from "gatsby";
 
@@ -44,6 +45,7 @@ const PuppyDetail = ({ data }) => {
   const [errorAlert, setErrorAlert] = useState(null);
   const [displayChat, setDisplayChat] = useState(false);
   const [breederInfo, setBreederInfo] = useState(null);
+  const [stripePaymentLink, setStripePaymentLink] = useState(null);
 
   const defaultMetadata = {
     first_name: "",
@@ -97,6 +99,11 @@ const PuppyDetail = ({ data }) => {
         } catch (e) {
           console.log(e, "error fetching favorites");
         }
+        setStripePaymentLink(
+          `https://buy.stripe.com/test_bIYcQ74yk3Svf4s144?prefilled_email=${
+            user.email
+          }&client_reference_id=${puppy.id}_${user.sub.replace("|", "_")}`
+        );
       }
     }
     checkFavorite();
@@ -213,7 +220,6 @@ const PuppyDetail = ({ data }) => {
 
             <Button
               className={button}
-              mt={8}
               onClick={() => setDisplayChat(true)}
               isDisabled={puppy.owner_id === user?.sub}
             >
@@ -221,14 +227,31 @@ const PuppyDetail = ({ data }) => {
             </Button>
             <Button
               className={button}
-              mt={8}
               onClick={() =>
                 navigate(`/breeder/${puppy.owner_id.split("|").pop()}`)
               }
             >
               View Breeder's Profile
             </Button>
-            {/*<Button className={button}>Book a Showing</Button>*/}
+            <Button
+              className={button}
+              isDisabled={puppy.owner_id === user?.sub || !stripePaymentLink}
+              onClick={() => window.open(stripePaymentLink, "_blank")}
+            >
+              <Tooltip
+                label={
+                  !stripePaymentLink
+                    ? "Please login first"
+                    : "Can't apply for your own puppy"
+                }
+                isDisabled={
+                  !(puppy.owner_id === user?.sub || !stripePaymentLink)
+                }
+              >
+                Reserve
+              </Tooltip>
+            </Button>
+            <Button className={button}>Application form</Button>
           </SimpleGrid>
         </Box>
       </Flex>
