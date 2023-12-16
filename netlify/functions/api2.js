@@ -106,7 +106,7 @@ router.post("/webhook", async (req, res) => {
         });
 
         // Trigger a rebuild in gatsby via webhook
-        axios.post(process.env.NETLIFY_BUILD_WEBHOOK);
+        await axios.post(process.env.NETLIFY_BUILD_WEBHOOK);
       } catch (err) {
         return res.status(400).send(`Webhook Error: ${err.message}`);
       }
