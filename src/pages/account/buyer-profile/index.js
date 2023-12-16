@@ -39,13 +39,14 @@ import Header from "../../../components/header";
 import Seo from "../../../components/seo";
 import CustomSpinner from "../../../components/spinner";
 import Toast from "../../../components/toast";
-import { storage } from "../../../firebase";
+import { db, storage } from "../../../firebase";
 import theme from "../../../theme";
 
 import CameraIcon from "../../../images/icons/camera.inline.svg";
 import EmailIcon from "../../../images/icons/email.inline.svg";
 import TelephoneIcon from "../../../images/icons/telephone.inline.svg";
 
+import ListPaymentTable from "../breeder-profile/list-payment";
 import {
   cancelButton,
   followerBox,
@@ -311,7 +312,7 @@ const BuyerProfile = () => {
         fontFamily="Poppins !important"
       >
         {!isFormLoading && (
-          <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
+          <Accordion defaultIndex={[0, 1]} allowMultiple>
             <AccordionItem border="0 !important">
               <AccordionButton>
                 <AccordionIcon fontSize={30} />
@@ -595,6 +596,21 @@ const BuyerProfile = () => {
                     </Form>
                   )}
                 </Formik>
+              </AccordionPanel>
+            </AccordionItem>
+            <AccordionItem>
+              <AccordionButton>
+                <AccordionIcon fontSize={30} />
+                <Text fontSize={28} fontWeight={600}>
+                  &emsp;Payment History
+                </Text>
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                <ListPaymentTable
+                  userId={user.sub}
+                  db={db}
+                  setErrorAlert={setErrorAlert}
+                />
               </AccordionPanel>
             </AccordionItem>
           </Accordion>

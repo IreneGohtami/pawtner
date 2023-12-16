@@ -19,6 +19,7 @@ import {
   doc,
   addDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   query,
   where,
@@ -137,7 +138,30 @@ const PuppyDetail = ({ data }) => {
       case "Available":
         return "Yes";
       default:
-        return "No";
+        return status;
+    }
+  };
+
+  const checkPuppyStatus = async () => {
+    setErrorAlert(null);
+    try {
+      const docRef = doc(db, "puppy", puppy.id);
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        const result = docSnapshot.data();
+        const status = result.status;
+
+        if (status !== "Available") {
+          setErrorAlert("Sorry, this puppy is no longer available.");
+        } else {
+          window.open(stripePaymentLink, "_blank");
+        }
+      } else {
+        setErrorAlert("Sorry, this puppy is no longer available.");
+      }
+    } catch (error) {
+      setErrorAlert("Sorry, there's a network error. Please reload the page.");
     }
   };
 
@@ -235,17 +259,27 @@ const PuppyDetail = ({ data }) => {
             </Button>
             <Button
               className={button}
-              isDisabled={puppy.owner_id === user?.sub || !stripePaymentLink}
-              onClick={() => window.open(stripePaymentLink, "_blank")}
+              isDisabled={
+                puppy.owner_id === user?.sub ||
+                !stripePaymentLink ||
+                puppy.status !== "Available"
+              }
+              onClick={() => checkPuppyStatus()}
             >
               <Tooltip
                 label={
-                  !stripePaymentLink
+                  puppy.status !== "Available"
+                    ? "Puppy is not available"
+                    : !stripePaymentLink
                     ? "Please login first"
                     : "Can't apply for your own puppy"
                 }
                 isDisabled={
-                  !(puppy.owner_id === user?.sub || !stripePaymentLink)
+                  !(
+                    puppy.owner_id === user?.sub ||
+                    !stripePaymentLink ||
+                    puppy.status !== "Available"
+                  )
                 }
               >
                 Reserve

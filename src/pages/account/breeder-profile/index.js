@@ -5,6 +5,7 @@ import {
   uploadBytes,
   deleteObject,
 } from "firebase/storage";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { Field, Form, Formik } from "formik";
 import countries from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
@@ -41,6 +42,7 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
 
 import Header from "../../../components/header";
 import Seo from "../../../components/seo";
@@ -53,6 +55,7 @@ import CameraIcon from "../../../images/icons/camera.inline.svg";
 import EmailIcon from "../../../images/icons/email.inline.svg";
 import TelephoneIcon from "../../../images/icons/telephone.inline.svg";
 
+import ListPaymentTable from "./list-payment";
 import ListPuppyTable from "./list-puppy";
 import UploadPuppyPage from "./upload-puppy";
 
@@ -100,6 +103,7 @@ const BreederProfile = () => {
   const [modalData, setModalData] = useState({});
   const [documents, setDocuments] = useState([]);
   const [documentUploadError, setDocumentUploadError] = useState(null);
+  const [reservedPuppies, setReservedPuppies] = useState([]);
 
   useEffect(() => {
     const names = user.name.split(" ");
@@ -132,7 +136,29 @@ const BreederProfile = () => {
       }
       setIsFormLoading(false);
     }
+
+    async function fetchPuppyReserved() {
+      try {
+        const q = query(
+          collection(db, "puppy"),
+          where("owner_id", "==", user.sub),
+          where("status", "==", "Reserved")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const data = [];
+        querySnapshot.forEach((doc) => {
+          data.push({ ...doc.data(), id: doc.id });
+        });
+
+        setReservedPuppies(data);
+        setErrorAlert(null);
+      } catch (error) {
+        setErrorAlert(error?.response?.data || error.message);
+      }
+    }
     fetchUserMetadata();
+    fetchPuppyReserved();
   }, []);
 
   useEffect(() => {
@@ -439,7 +465,7 @@ const BreederProfile = () => {
         fontFamily="Poppins !important"
       >
         {!isFormLoading && (
-          <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
+          <Accordion defaultIndex={[0, 1, 2, 3]} allowMultiple>
             <AccordionItem border="0 !important">
               <AccordionButton>
                 <AccordionIcon fontSize={30} />
@@ -728,9 +754,43 @@ const BreederProfile = () => {
                               <Text>{userMetadata.email}</Text>
                             </HStack>
 
-                            {/*<Text fontSize={22} fontWeight={500} mt={5}>
-                                Breeder Performance
-                              </Text>*/}
+                            <HStack mt={5}>
+                              <StarIcon
+                                h="18px"
+                                w="18px"
+                                color={theme.colors.primary}
+                              />
+                              <Text fontSize={22} fontWeight={500}>
+                                Puppy Reserved
+                              </Text>
+                              <StarIcon
+                                h="18px"
+                                w="18px"
+                                color={theme.colors.primary}
+                              />
+                            </HStack>
+                            <HStack spacing={4}>
+                              {reservedPuppies.length > 0 ? (
+                                reservedPuppies.map((puppy) => {
+                                  return (
+                                    <VStack>
+                                      <Image
+                                        src={
+                                          puppy.picture?.url ||
+                                          "/default-puppy-img.jpg"
+                                        }
+                                        borderRadius="full"
+                                        w="60px"
+                                        h="55px"
+                                      />
+                                      <Text fontSize={14}>{puppy.name}</Text>
+                                    </VStack>
+                                  );
+                                })
+                              ) : (
+                                <Text>No puppy reserved</Text>
+                              )}
+                            </HStack>
                           </VStack>
                         </Box>
                       </Flex>
@@ -832,6 +892,22 @@ const BreederProfile = () => {
                     </Upload>
                   </Box>
                 </Box>
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>
+                <AccordionIcon fontSize={30} />
+                <Text fontSize={28} fontWeight={600}>
+                  &emsp;Payment History
+                </Text>
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                <ListPaymentTable
+                  userId={user.sub}
+                  db={db}
+                  setErrorAlert={setErrorAlert}
+                />
               </AccordionPanel>
             </AccordionItem>
           </Accordion>

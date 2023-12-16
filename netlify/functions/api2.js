@@ -1,3 +1,4 @@
+import axios from "axios";
 import express, { Router } from "express";
 import bodyParser from "body-parser";
 import { initializeApp } from "firebase/app";
@@ -103,6 +104,9 @@ router.post("/webhook", async (req, res) => {
           payment_status: data.payment_status,
           created: data.created,
         });
+
+        // Trigger a rebuild in gatsby via webhook
+        axios.post(process.env.NETLIFY_BUILD_WEBHOOK);
       } catch (err) {
         return res.status(400).send(`Webhook Error: ${err.message}`);
       }

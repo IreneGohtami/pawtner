@@ -23,8 +23,6 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-//import { query, collection, getDocs, where, orderBy } from "firebase/firestore";
-//import { db } from "../../firebase";
 
 import FilterIcon from "../../images/icons/filter.inline.svg";
 import SearchIcon from "../../images/icons/search.inline.svg";
@@ -37,33 +35,6 @@ import { title, subtitle, infoBox, learnMoreBtn } from "./home.module.css";
 
 const HomePage = ({ puppyList = [] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  /*const [puppyList, setPuppyList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function listPuppy() {
-      setIsLoading(true);
-      try {
-        // Fetch all available puppies
-        const q = query(
-          collection(db, "puppy"),
-          where("status", "==", "available"),
-          orderBy("created_at", "asc")
-        );
-        const querySnapshot = await getDocs(q);
-
-        const data = [];
-        querySnapshot.forEach((doc) => {
-          data.push({ ...doc.data(), id: doc.id });
-        });
-        setPuppyList(data);
-      } catch (e) {
-        console.log(e, "Failed to fetch puppy list");
-      }
-      setIsLoading(false);
-    }
-    listPuppy();
-  }, []);*/
 
   const renderPuppy = (puppy) => {
     return (
@@ -202,7 +173,6 @@ const HomePage = ({ puppyList = [] }) => {
             <Text className={title} my={8}>
               Pet Available For Adoption
             </Text>
-            {/*isLoading && <Text>Loading...</Text>*/}
           </VStack>
           <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={4}>
             {puppyList.map(

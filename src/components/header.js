@@ -24,6 +24,8 @@ import {
 } from "@chakra-ui/react";
 import { BellIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "@reach/router";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../firebase";
 import { getCookie, deleteCookie } from "../cookie-manager";
 
 import ChatPage from "../components/chat";
@@ -40,6 +42,7 @@ const Header = ({
   const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [role, setRole] = useState([]);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
   const isProfilePage = location.pathname === "/account/breeder-profile/";
@@ -68,8 +71,37 @@ const Header = ({
         navigate("/");
         return;
       }
+
+      fetchConversation();
     }
   }, [user]);
+
+  const fetchConversation = async () => {
+    if (isAuthenticated && user) {
+      const userId = user.sub.split("|")[1];
+
+      try {
+        // Filter query based on participants user_id
+        const q = query(
+          collection(db, "chat_history"),
+          where("participants.user_ids", "array-contains-any", [userId])
+        );
+        const querySnapshot = await getDocs(q);
+
+        let _unreadMessageCount = 0;
+        querySnapshot.forEach((doc) => {
+          const { messages } = doc.data();
+          _unreadMessageCount += messages.filter(
+            (_message) => !_message.read && _message.sender_id !== userId
+          ).length;
+        });
+
+        setUnreadMessageCount(_unreadMessageCount);
+      } catch (error) {
+        console.log(error, "error fetching conversation");
+      }
+    }
+  };
 
   return (
     <Flex bg={bg || "none"} px="40px">
@@ -103,6 +135,22 @@ const Header = ({
                 cursor="pointer"
                 onClick={onOpen}
               >
+                {!!unreadMessageCount && (
+                  <Circle
+                    bg="#FEE8A0"
+                    position="absolute"
+                    ml="30px"
+                    top="15px"
+                    px={1}
+                    w="26px"
+                    h="26px"
+                    filter="drop-shadow(0px 6px 8px rgba(135, 67, 223, 0.37))"
+                  >
+                    <Text fontSize={14} fontWeight={600}>
+                      {unreadMessageCount}
+                    </Text>
+                  </Circle>
+                )}
                 <BellIcon h="28px" w="28px" />
               </Circle>
             ) : (

@@ -17,7 +17,7 @@ export const query = graphql`
   query {
     allPuppy(
       sort: { created_at: ASC }
-      filter: { status: { eq: "Available" } }
+      filter: { status: { ne: "Unlisted" } }
     ) {
       nodes {
         id
