@@ -1,13 +1,26 @@
 import { graphql, navigate } from "gatsby";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Heading, Image, SimpleGrid, VStack } from "@chakra-ui/react";
 import theme from "../theme";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import Seo from "../components/seo";
 
-const DogsPage = ({ data }) => {
-  const puppyList = data.allPuppy.nodes;
+const DogsPage = ({ data, location }) => {
+  const [puppyList, setPuppyList] = useState(data.allPuppy.nodes);
+  const search = new URLSearchParams(location.search).get("search") || "";
+
+  useEffect(() => {
+    if (search) {
+      setPuppyList(
+        puppyList.filter(
+          (puppy) =>
+            puppy.name.toLowerCase().includes(search.toLowerCase()) ||
+            puppy.breed.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search]);
 
   const renderPuppy = (puppy) => {
     return (
@@ -46,6 +59,13 @@ const DogsPage = ({ data }) => {
       <Heading my={8} textAlign="center">
         Pet Available For Adoption
       </Heading>
+
+      {puppyList.length === 0 && (
+        <Heading size="md" textAlign="center">
+          No puppy found
+        </Heading>
+      )}
+
       <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={4} mb="40px">
         {puppyList.map((puppy) => renderPuppy(puppy))}
       </SimpleGrid>

@@ -35,6 +35,7 @@ import { title, subtitle, infoBox, learnMoreBtn } from "./home.module.css";
 
 const HomePage = ({ puppyList = [] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [search, setSearch] = React.useState("");
 
   const renderPuppy = (puppy) => {
     return (
@@ -79,6 +80,12 @@ const HomePage = ({ puppyList = [] }) => {
         alt={`${puppy.name} - ${puppy.breed}`}
       />
     );
+  };
+
+  const searchPuppy = () => {
+    if (search) {
+      navigate(`/dogs?search=${search}`);
+    }
   };
 
   return (
@@ -136,9 +143,16 @@ const HomePage = ({ puppyList = [] }) => {
                     h={[39, 50, 70, 120]}
                     w={[250, 350, 600, 750, 900, 1050]}
                     fontSize={[16, 20, 26, 33]}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        searchPuppy();
+                      }
+                    }}
                   />
                   <InputRightAddon
                     bg="white"
+                    cursor="pointer"
                     borderRadius="0 23px 23px 0"
                     children={
                       <Icon
@@ -149,6 +163,7 @@ const HomePage = ({ puppyList = [] }) => {
                     }
                     h={[39, 50, 70, 120]}
                     pr={8}
+                    onClick={searchPuppy}
                   />
                 </InputGroup>
               </HStack>
