@@ -29,11 +29,24 @@ const Footer = ({ currentPage }) => {
         <Link mt="20px" href="/" {...applyCurrentPageStyle("home")}>
           Home
         </Link>
-        <Link>About Us</Link>
-        <Link>Service</Link>
-        <Link>Shop Products</Link>
-        <Link>Gallery</Link>
-        <Link>Events</Link>
+        <Link href="/about-us" {...applyCurrentPageStyle("about-us")}>
+          About Us
+        </Link>
+        <Link href="/faq" {...applyCurrentPageStyle("faq")}>
+          FAQ
+        </Link>
+        <Link
+          href="/privacy-policy"
+          {...applyCurrentPageStyle("privacy-policy")}
+        >
+          Privacy Policy
+        </Link>
+        <Link
+          href="/terms-and-conditions"
+          {...applyCurrentPageStyle("terms-and-conditions")}
+        >
+          Terms & Conditions
+        </Link>
       </VStack>
 
       <VStack w="22%" alignItems="start">
