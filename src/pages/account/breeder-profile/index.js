@@ -9,6 +9,8 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { Field, Form, Formik } from "formik";
 import countries from "i18n-iso-countries";
 import en from "i18n-iso-countries/langs/en.json";
+import isEmpty from "lodash/isEmpty";
+import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 
 import { Upload } from "antd";
@@ -34,10 +36,17 @@ import {
   Icon,
   Image,
   Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Select,
   Stack,
   Text,
   Textarea,
+  Tooltip,
   Spacer,
   VStack,
   useDisclosure,
@@ -104,6 +113,10 @@ const BreederProfile = () => {
   const [documents, setDocuments] = useState([]);
   const [documentUploadError, setDocumentUploadError] = useState(null);
   const [reservedPuppies, setReservedPuppies] = useState([]);
+  const [viewReservedPuppy, setViewReservedPuppy] = useState(false);
+  const [isLoadingReservedPuppy, setIsLoadingReservedPuppy] = useState(false);
+  const [reservedPuppyPayment, setReservedPuppyPayment] = useState(null);
+  const [isRefunding, setIsRefunding] = useState(false);
 
   useEffect(() => {
     const names = user.name.split(" ");
@@ -132,7 +145,7 @@ const BreederProfile = () => {
         setConnection(data.identities[0].connection);
         setErrorAlert(null);
       } catch (error) {
-        setErrorAlert(error?.response?.data || error.message);
+        setErrorAlert(error?.response?.data?.error || error.message);
       }
       setIsFormLoading(false);
     }
@@ -154,7 +167,7 @@ const BreederProfile = () => {
         setReservedPuppies(data);
         setErrorAlert(null);
       } catch (error) {
-        setErrorAlert(error?.response?.data || error.message);
+        setErrorAlert(error?.response?.data?.error || error.message);
       }
     }
     fetchUserMetadata();
@@ -348,7 +361,6 @@ const BreederProfile = () => {
         setErrorAlert(null);
       } catch (error) {
         setErrorAlert("Error uploading image. Please try again.");
-        console.log("Error uploading image:", error);
         setIsUploadingPicture(false);
       }
     }
@@ -433,6 +445,134 @@ const BreederProfile = () => {
     setDocuments(documents);
   };
 
+  const viewReservedPuppyDetail = async (puppyId) => {
+    setIsLoadingReservedPuppy(true);
+    setViewReservedPuppy(true);
+    try {
+      const q = query(
+        collection(db, "payment"),
+        where("animal_id", "==", puppyId),
+        where("type", "==", "reservation")
+      );
+
+      const querySnapshot = await getDocs(q);
+      let tempData = null;
+      if (!querySnapshot.empty) {
+        tempData = {
+          ...querySnapshot.docs[0].data(),
+          id: querySnapshot.docs[0].id,
+        };
+      }
+
+      if (tempData) {
+        const buyerInfo = await fetchBuyerInfo(tempData.user_id);
+        setReservedPuppyPayment({
+          ...tempData,
+          buyer: buyerInfo,
+        });
+      }
+
+      setErrorAlert(null);
+    } catch (error) {
+      setErrorAlert(
+        "Failed to retrieve reserved puppy payment details. Please try again."
+      );
+    }
+    setIsLoadingReservedPuppy(false);
+  };
+
+  const renderPuppyPayment = () => {
+    if (!reservedPuppyPayment) {
+      return <Text>No payment record found for this puppy.</Text>;
+    }
+    return (
+      <VStack spacing={5} alignItems="flex-start">
+        <HStack>
+          <Text fontWeight={600}>Buyer:</Text>
+          <Text>
+            {reservedPuppyPayment.buyer.name} (
+            {reservedPuppyPayment.buyer.email})
+          </Text>
+        </HStack>
+        <HStack>
+          <Text fontWeight={600}>Payment Status:</Text>
+          <Text>{reservedPuppyPayment.payment_status}</Text>
+        </HStack>
+        <HStack>
+          <Text fontWeight={600}>Amount:</Text>
+          <Text>
+            {reservedPuppyPayment.currency.toUpperCase()}{" "}
+            {reservedPuppyPayment.amount.toLocaleString()}
+          </Text>
+        </HStack>
+        <HStack>
+          <Text fontWeight={600}>Date:</Text>
+          <Text>
+            {moment
+              .unix(reservedPuppyPayment.created)
+              .format("YYYY-MM-DD HH:mm:ss")}
+          </Text>
+        </HStack>
+        {reservedPuppyPayment.refund_status === "succeeded" && (
+          <HStack>
+            <Text fontWeight={600}>Refund Status:</Text>
+            <Text>{reservedPuppyPayment.refund_status}</Text>
+          </HStack>
+        )}
+        <Divider w="100%" />
+      </VStack>
+    );
+  };
+
+  const fetchBuyerInfo = async (userId) => {
+    try {
+      setErrorAlert(null);
+      const { data } = await axios.get(
+        `/api/auth0?action=get_user_metadata&userId=${userId}`
+      );
+
+      const res = {
+        email: data.email,
+        name:
+          isEmpty(data.user_metadata) || !data.user_metadata.first_name
+            ? data.nickname
+            : `${data.user_metadata.first_name} ${data.user_metadata.last_name}`,
+      };
+      return res;
+    } catch (error) {
+      setErrorAlert(error?.response?.data?.error || error.message);
+    }
+  };
+
+  const refundReservationFee = async (paymentId) => {
+    setErrorAlert(null);
+    setIsRefunding(true);
+    const reservationFee = 10 * 100;
+
+    try {
+      const { data } = await axios.post("/api2/refund", {
+        paymentIntentId: paymentId,
+        refundAmount: reservationFee,
+      });
+
+      if (data.status === "succeeded") {
+        setSuccessAlert("Reservation deposit refunded successfully.");
+        setViewReservedPuppy(false);
+      } else {
+        setErrorAlert(
+          "Failed to refund reservation deposit. Please try again."
+        );
+      }
+    } catch (error) {
+      setErrorAlert(
+        "Failed to refund reservation deposit. " +
+          error?.response?.data?.error || error.message
+      );
+    }
+
+    setIsRefunding(false);
+  };
+
   countries.registerLocale(en);
   const countryObj = countries.getNames("en", { select: "official" });
   const countryArr = Object.entries(countryObj).map(([key, value]) => {
@@ -456,6 +596,39 @@ const BreederProfile = () => {
         bg="#F2F2F2"
         userMetadata={userMetadata}
       />
+
+      <Modal
+        isOpen={viewReservedPuppy}
+        onClose={() => setViewReservedPuppy(false)}
+        fontFamily="Poppins !important"
+      >
+        <ModalContent>
+          <ModalHeader>Reservation Payment Record</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {isLoadingReservedPuppy ? <CustomSpinner /> : renderPuppyPayment()}
+          </ModalBody>
+          {!isLoadingReservedPuppy && (
+            <ModalFooter>
+              <Tooltip label="By clicking this, you will refund the buyer's deposit fee for the reservation he/she made. This action indicates that the puppy has been successfully sold.">
+                <Button
+                  bg={theme.colors.primary}
+                  colorScheme="yellow"
+                  isLoading={isRefunding}
+                  isDisabled={
+                    reservedPuppyPayment.refund_status === "succeeded"
+                  }
+                  onClick={() =>
+                    refundReservationFee(reservedPuppyPayment.payment_id)
+                  }
+                >
+                  Release reservation deposit
+                </Button>
+              </Tooltip>
+            </ModalFooter>
+          )}
+        </ModalContent>
+      </Modal>
 
       <Box
         w="100%"
@@ -773,7 +946,12 @@ const BreederProfile = () => {
                               {reservedPuppies.length > 0 ? (
                                 reservedPuppies.map((puppy) => {
                                   return (
-                                    <VStack>
+                                    <VStack
+                                      cursor="pointer"
+                                      onClick={() =>
+                                        viewReservedPuppyDetail(puppy.id)
+                                      }
+                                    >
                                       <Image
                                         src={
                                           puppy.picture?.url ||

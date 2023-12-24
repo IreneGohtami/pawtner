@@ -6,7 +6,10 @@ import {
   collection,
   doc,
   addDoc,
+  getDocs,
+  query,
   updateDoc,
+  where,
   getFirestore,
 } from "firebase/firestore";
 import serverless from "serverless-http";
@@ -116,6 +119,43 @@ router.post("/webhook", async (req, res) => {
   }
 
   return res.status(200).send(`Event "${event.type}" successfully processed`);
+});
+
+router.post("/refund", async (req, res) => {
+  try {
+    const { paymentIntentId, refundAmount } = req.body;
+
+    // Initiate the refund
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      appInfo: {
+        name: "Pawtner",
+      },
+    });
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+      amount: refundAmount,
+    });
+
+    // Update payment record
+    const paymentRef = collection(db, "payment");
+    const queryRes = query(
+      paymentRef,
+      where("payment_id", "==", paymentIntentId)
+    );
+    const paymentSnapshot = await getDocs(queryRes);
+    if (!paymentSnapshot.empty) {
+      const paymentDoc = paymentSnapshot.docs[0];
+      await updateDoc(paymentDoc.ref, {
+        refund_id: refund.id,
+        refund_status: refund.status,
+      });
+    }
+
+    res.json(refund);
+  } catch (error) {
+    console.log(error, "refund error");
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export const handler = serverless(app);

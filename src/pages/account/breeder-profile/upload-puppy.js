@@ -95,7 +95,7 @@ const UploadPuppyPage = ({
   const [uploadCertificateError, setUploadCertificateError] = useState("");
   const [deletedCertificates, setDeletedCertificates] = useState([]);
   const colors = ["Brown", "Black", "White", "Gray", "Others"];
-  const statuses = ["Available", "Adopted", "Unlisted"];
+  const statuses = ["Available", "Adopted", "Reserved", "Unlisted"];
   const sizes = ["Small", "Medium", "Large"];
 
   useEffect(() => {
@@ -238,8 +238,6 @@ const UploadPuppyPage = ({
     // Handle certificate upload & deletion
     const certificateList = [];
     if (certificates.length) {
-      //console.log(certificates, "certificates");
-      //return;
       let uploadFailed = false;
       for (let i = 0; i < certificates.length; i++) {
         const certificate = certificates[i];
