@@ -64,7 +64,7 @@ const Header = ({
           openSelectOptionModal();
         }
       }
-      console.log(user, roles, "user");
+      //console.log(user, roles, "user");
       setRole(roles || []);
 
       if (!roles.includes(authorizedRole) && authorizedRole !== "all") {

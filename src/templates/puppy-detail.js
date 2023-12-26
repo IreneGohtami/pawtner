@@ -285,7 +285,13 @@ const PuppyDetail = ({ data }) => {
                 Reserve
               </Tooltip>
             </Button>
-            <Button className={button}>Application form</Button>
+            <Button
+              className={button}
+              isDisabled={!puppy.application_form}
+              onClick={() => window.open(puppy.application_form, "_blank")}
+            >
+              Application form
+            </Button>
           </SimpleGrid>
         </Box>
       </Flex>
@@ -321,6 +327,7 @@ export const pageQuery = graphql`
       status
       about_puppy
       owner_id
+      application_form
     }
   }
 `;

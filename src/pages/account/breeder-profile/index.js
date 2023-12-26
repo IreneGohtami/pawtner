@@ -616,10 +616,10 @@ const BreederProfile = () => {
                   colorScheme="yellow"
                   isLoading={isRefunding}
                   isDisabled={
-                    reservedPuppyPayment.refund_status === "succeeded"
+                    reservedPuppyPayment?.refund_status === "succeeded"
                   }
                   onClick={() =>
-                    refundReservationFee(reservedPuppyPayment.payment_id)
+                    refundReservationFee(reservedPuppyPayment?.payment_id)
                   }
                 >
                   Release reservation deposit

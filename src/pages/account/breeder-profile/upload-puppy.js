@@ -80,6 +80,7 @@ const UploadPuppyPage = ({
     size: "",
     status: "Unlisted",
     certificates: [],
+    application_form: "",
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -167,7 +168,10 @@ const UploadPuppyPage = ({
     className: puppyFormInput,
     focusBorderColor: theme.colors.primary,
     variant: "outline",
-    placeholder: name.charAt(0).toUpperCase() + name.slice(1),
+    placeholder:
+      name !== "application_form"
+        ? name.charAt(0).toUpperCase() + name.slice(1)
+        : "Enter URL such as Google Form, Typeform, etc.",
     cursor,
     value: form[name],
     onChange: (e) => {
@@ -229,7 +233,6 @@ const UploadPuppyPage = ({
           setUploadError("Error uploading puppy image. Please try again.");
           setIsSubmitting(false);
           setForm({ ...form, picture: null });
-          console.log("Error uploading puppy image:", error);
           return;
         }
       }
@@ -267,7 +270,6 @@ const UploadPuppyPage = ({
         } catch (error) {
           setUploadError("Error uploading certificate. Please try again.");
           setIsSubmitting(false);
-          console.log("Error uploading certificate:", error);
           uploadFailed = true;
           return;
         }
@@ -322,7 +324,6 @@ const UploadPuppyPage = ({
     } catch (error) {
       setUploadError("Error uploading puppy. Please try again.");
       setIsSubmitting(false);
-      console.log("Error uploading puppy to DB:", error);
       return;
     }
 
@@ -375,6 +376,9 @@ const UploadPuppyPage = ({
       setFormError(
         'Your profile must be verified by our admin first to list puppy. Please set status to "Unlisted".'
       );
+      return false;
+    }
+    if (form.application_form && !isValidURL(form.application_form)) {
       return false;
     }
     return true;
@@ -447,6 +451,15 @@ const UploadPuppyPage = ({
       }
 
       setCertificates(event.fileList);
+    }
+  };
+
+  const isValidURL = (str) => {
+    try {
+      new URL(str);
+      return true;
+    } catch (_) {
+      return false;
     }
   };
 
@@ -744,6 +757,21 @@ const UploadPuppyPage = ({
                   </Button>
                 )}
               </Upload>
+            </Box>
+            <Spacer />
+          </Flex>
+          <Flex mt={4}>
+            <Spacer />
+            <Box flex={4}>
+              <Text fontWeight={600} mb={3}>
+                Application form
+              </Text>
+              <FormControl
+                isInvalid={isValidating && !isValidURL(form.application_form)}
+              >
+                <Input {...inputProperties("application_form", "text")} />
+                {renderErrorMessage("Application form must be a valid URL.")}
+              </FormControl>
             </Box>
             <Spacer />
           </Flex>
