@@ -83,7 +83,7 @@ const UploadPuppyPage = ({
     application_form: "",
   };
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(action !== "add" ? puppyData : emptyForm);
   const [formError, setFormError] = useState("");
   const [isValidating, setIsValidating] = useState(false); // For form validation
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -226,7 +226,10 @@ const UploadPuppyPage = ({
             `users/${userId}/puppies/${puppyImageRefId}.png`
           );
 
-          const snapshot = await uploadBytes(storageRef, form.picture);
+          const snapshot = await uploadBytes(
+            storageRef,
+            form.picture.originFileObj
+          );
           puppyPictureUrl = await getDownloadURL(snapshot.ref);
           setForm({ ...form, picture: puppyPictureUrl });
         } catch (error) {
@@ -406,7 +409,7 @@ const UploadPuppyPage = ({
     return isJpgOrPng && isLt2M;
   };
 
-  const handleChange = (event) => {
+  const handlePictureChange = (event) => {
     if (isSubmitting) {
       return;
     }
@@ -421,7 +424,7 @@ const UploadPuppyPage = ({
         setFormError("");
         setLoading(false);
       };
-      reader.readAsDataURL(file?.originFileObj || file);
+      reader.readAsDataURL(file.originFileObj || file);
     }
   };
 
@@ -440,7 +443,7 @@ const UploadPuppyPage = ({
       setCertificates(newCertificates);
       setDeletedCertificates([...deletedCertificates, file.uid]);
     } else if (file) {
-      if (status === "error") {
+      if (status === "error" || status === "uploading") {
         // change to pending so it doesn't have the default error cannot post 404
         file.status = "pending";
       } else {
@@ -451,6 +454,7 @@ const UploadPuppyPage = ({
       }
 
       setCertificates(event.fileList);
+      return;
     }
   };
 
@@ -524,7 +528,7 @@ const UploadPuppyPage = ({
                           beforeUpload={(file) =>
                             validateImage(file, "profile")
                           }
-                          onChange={handleChange}
+                          onChange={handlePictureChange}
                         >
                           {!imageUrl ? (
                             <Box textAlign="center">
@@ -739,7 +743,7 @@ const UploadPuppyPage = ({
               <Upload
                 name="certificates"
                 accept="image/*"
-                showUploadList={true}
+                showUploadList={false}
                 multiple={true}
                 maxCount={3}
                 beforeUpload={(file) => validateImage(file, "certificate")}
@@ -767,7 +771,11 @@ const UploadPuppyPage = ({
                 Application form
               </Text>
               <FormControl
-                isInvalid={isValidating && !isValidURL(form.application_form)}
+                isInvalid={
+                  isValidating &&
+                  form.application_form &&
+                  !isValidURL(form.application_form)
+                }
               >
                 <Input {...inputProperties("application_form", "text")} />
                 {renderErrorMessage("Application form must be a valid URL.")}

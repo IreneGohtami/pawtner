@@ -16,7 +16,7 @@ const IndexPage = ({ data }) => {
 export const query = graphql`
   query {
     allPuppy(
-      sort: { created_at: ASC }
+      sort: { created_at: DESC }
       filter: { status: { ne: "Unlisted" } }
     ) {
       nodes {

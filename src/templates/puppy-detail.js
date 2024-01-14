@@ -40,14 +40,6 @@ import {
 
 const PuppyDetail = ({ data }) => {
   const { puppy } = data;
-  const { isAuthenticated, user } = useAuth0();
-  const [isFavorite, setIsFavorite] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorAlert, setErrorAlert] = useState(null);
-  const [displayChat, setDisplayChat] = useState(false);
-  const [breederInfo, setBreederInfo] = useState(null);
-  const [stripePaymentLink, setStripePaymentLink] = useState(null);
-
   const defaultMetadata = {
     first_name: "",
     last_name: "",
@@ -65,6 +57,14 @@ const PuppyDetail = ({ data }) => {
     documents: [],
   };
 
+  const { isAuthenticated, user } = useAuth0();
+  const [isFavorite, setIsFavorite] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorAlert, setErrorAlert] = useState(null);
+  const [displayChat, setDisplayChat] = useState(false);
+  const [breederInfo, setBreederInfo] = useState(defaultMetadata);
+  const [stripePaymentLink, setStripePaymentLink] = useState(null);
+
   useEffect(() => {
     async function fetchBreederInfo() {
       try {
@@ -72,7 +72,9 @@ const PuppyDetail = ({ data }) => {
         const { data } = await axios.get(
           `/api/auth0?action=get_user_metadata&userId=${puppy.owner_id}`
         );
-        setBreederInfo(data?.user_metadata || defaultMetadata);
+        if (data?.user_metadata) {
+          setBreederInfo(data.user_metadata);
+        }
         setErrorAlert(null);
       } catch (error) {
         setErrorAlert(error?.response?.data || error.message);

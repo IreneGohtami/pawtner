@@ -86,7 +86,9 @@ const BreedersPage = ({ pageContext, data }) => {
         const { data } = await axios.get(
           `/api/auth0?action=get_user_metadata&userId=${userId}`
         );
-        setBreederInfo(data?.user_metadata || defaultMetadata);
+        if (data?.user_metadata) {
+          setBreederInfo(data.user_metadata);
+        }
         setErrorAlert(null);
       } catch (error) {
         setErrorAlert(error?.response?.data || error.message);
@@ -94,7 +96,7 @@ const BreedersPage = ({ pageContext, data }) => {
       setIsLoading(false);
     }
     fetchBreederInfo();
-  }, []);
+  }, [userId]);
 
   const viewImage = (url) => {
     setViewImageUrl(url);
