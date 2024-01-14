@@ -164,7 +164,7 @@ const TermsAndConditionsPage = () => {
           <UnorderedList pl={5}>
             <li>
               For questions or concerns about these terms, please contact us at
-              support@pawtner.com.
+              contact@pawtner.ca.
             </li>
           </UnorderedList>
         </Text>

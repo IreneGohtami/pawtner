@@ -232,23 +232,18 @@ const HomePage = ({ puppyList = [] }) => {
             <HStack spacing={4} mt="20px">
               <Box className={infoBox}>
                 <Box h="160px">
-                  <Text className={subtitle}>Checklist for New Adopters</Text>
+                  <Text className={subtitle}>About Us</Text>
                   <Text mt={4}>
-                    Help make the transition, smooth as possible.
+                    Our mission and commitment, how it works, as well as data
+                    security of this platform.
                   </Text>
                 </Box>
-                <Button className={learnMoreBtn}>Learn More</Button>
-              </Box>
-
-              <Box className={infoBox}>
-                <Box h="160px">
-                  <Text className={subtitle}>COVID-19 Resources</Text>
-                  <Text mt={4}>
-                    Get the latest on adoption processes, learn how local
-                    shelters and rescue groups are adapting.
-                  </Text>
-                </Box>
-                <Button className={learnMoreBtn}>Learn More</Button>
+                <Button
+                  className={learnMoreBtn}
+                  onClick={() => navigate("/about-us")}
+                >
+                  Learn More
+                </Button>
               </Box>
 
               <Box className={infoBox}>
@@ -258,7 +253,28 @@ const HomePage = ({ puppyList = [] }) => {
                     Get answers to question you haven't thought of.
                   </Text>
                 </Box>
-                <Button className={learnMoreBtn}>Learn More</Button>
+                <Button
+                  className={learnMoreBtn}
+                  onClick={() => navigate("/faq")}
+                >
+                  Learn More
+                </Button>
+              </Box>
+
+              <Box className={infoBox}>
+                <Box h="160px">
+                  <Text className={subtitle}>Privacy Policy</Text>
+                  <Text mt={4}>
+                    Read through our guidelines to ensure your data is safe with
+                    us.
+                  </Text>
+                </Box>
+                <Button
+                  className={learnMoreBtn}
+                  onClick={() => navigate("/privacy-policy")}
+                >
+                  Learn More
+                </Button>
               </Box>
             </HStack>
           </Box>

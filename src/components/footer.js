@@ -1,7 +1,8 @@
 import React from "react";
-import { Flex, Link, Text, VStack } from "@chakra-ui/react";
-import { PhoneTwoTone, MailTwoTone } from "@ant-design/icons";
+import { Flex, IconButton, Link, Text, VStack } from "@chakra-ui/react";
+import { MailTwoTone } from "@ant-design/icons";
 
+const pawtnerEmail = "contact@pawtner.ca";
 const Footer = ({ currentPage }) => {
   const applyCurrentPageStyle = (page) => {
     return currentPage === page
@@ -9,15 +10,20 @@ const Footer = ({ currentPage }) => {
       : { color: "#000000" };
   };
 
+  const handleEmailButtonClick = () => {
+    window.location.href = `mailto:${pawtnerEmail}`;
+  };
+
   return (
     <Flex bg="#FEE8A0" p="60px" fontFamily="Montserrat !important">
-      <VStack flex="1" alignItems="start">
+      <VStack flex="1" alignItems="start" pr="50px">
         <Text fontSize={20} fontFamily="Sniglet !important">
-          Your Own Pets Factory
+          Finding the right partner has never been easier
         </Text>
-        <Text mt="20px" maxW="250px">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit ut aliquam,
-          purus sit
+        <Text mt="20px">
+          At Pawtner, we understand the challenges of finding the perfect furry
+          companion, and we've crafted a platform to simplify and streamline the
+          process.
         </Text>
       </VStack>
 
@@ -58,18 +64,18 @@ const Footer = ({ currentPage }) => {
         </Link>
       </VStack>
 
-      <VStack w="23%" alignItems="start">
+      <VStack w="22%" alignItems="start">
         <Text fontSize={20} fontFamily="Sniglet !important">
           Contact Information
         </Text>
-        <Text mt="20px">Street Panyanggar, Miles, USA</Text>
-        <Text fontWeight={600}>
-          <PhoneTwoTone twoToneColor="red" />
-          &nbsp; 0878-1263-9283
-        </Text>
-        <Text fontWeight={600}>
-          <MailTwoTone twoToneColor="red" />
-          &nbsp; info@domain.com
+        <Text fontWeight={600} ml="-10px">
+          <IconButton
+            icon={<MailTwoTone twoToneColor="red" />}
+            fontSize="18px"
+            colorScheme="transparent"
+            onClick={handleEmailButtonClick}
+          />
+          <a href={`mailto:${pawtnerEmail}`}>{pawtnerEmail}</a>
         </Text>
       </VStack>
     </Flex>

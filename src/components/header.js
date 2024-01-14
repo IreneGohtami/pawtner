@@ -10,6 +10,7 @@ import {
   Flex,
   Hide,
   IconButton,
+  Image,
   Link,
   Menu,
   MenuButton,
@@ -29,7 +30,6 @@ import { db } from "../firebase";
 import { getCookie, deleteCookie } from "../cookie-manager";
 
 import ChatPage from "../components/chat";
-import PawtnerLogo from "../images/logo.inline.svg";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
 
 const Header = ({
@@ -106,9 +106,9 @@ const Header = ({
   return (
     <Flex bg={bg || "none"} px="40px">
       <Center h={headerHeights}>
-        <PawtnerLogo
-          width="183px"
-          cursor="pointer"
+        <IconButton
+          icon={<Image src="/logo.png" width="210px" />}
+          colorScheme="transparent"
           onClick={() => navigate("/")}
         />
       </Center>

@@ -157,7 +157,7 @@ const PrivacyPolicyPage = () => {
           <UnorderedList pl={5}>
             <li>
               If you have questions or concerns regarding this Privacy Policy,
-              please contact us at support@pawtner.com.
+              please contact us at contact@pawtner.ca.
             </li>
           </UnorderedList>
         </Text>

@@ -101,7 +101,7 @@ const FAQPage = () => {
         </Heading>
         <Text>
           For additional inquiries or support, you can reach out to our customer
-          service team at support@pawtner.com.
+          service team at contact@pawtner.ca.
         </Text>
       </Box>
       <Footer currentPage="faq" />

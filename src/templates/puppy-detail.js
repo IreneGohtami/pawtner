@@ -186,12 +186,13 @@ const PuppyDetail = ({ data }) => {
         Puppy Details
       </Text>
       <Flex px="40px">
-        <Box display="block" pl={3} textAlign="right">
+        <Box flex="1" display="block" pl={3} textAlign="right">
           <Image
             w="auto"
             maxH="650px"
             objectFit="cover"
             borderRadius="20px"
+            margin="0 auto"
             border={puppy.picture?.url ? 0 : "2px solid #E2E8F0"}
             padding={puppy.picture?.url ? 0 : "15px"}
             src={puppy.picture?.url || "/default-puppy-img.jpg"}
@@ -290,7 +291,16 @@ const PuppyDetail = ({ data }) => {
               isDisabled={!puppy.application_form}
               onClick={() => window.open(puppy.application_form, "_blank")}
             >
-              Application form
+              <Tooltip
+                label={
+                  !puppy.application_form
+                    ? "Fill application form so the breeder can contact you to apply"
+                    : "Can't apply for your own puppy"
+                }
+                placement="right"
+              >
+                Application form
+              </Tooltip>
             </Button>
           </SimpleGrid>
         </Box>
