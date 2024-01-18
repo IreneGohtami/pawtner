@@ -1,6 +1,13 @@
 import { graphql, navigate } from "gatsby";
 import React, { useEffect, useState } from "react";
-import { Button, Heading, Image, SimpleGrid, VStack } from "@chakra-ui/react";
+import {
+  Button,
+  Heading,
+  Image,
+  SimpleGrid,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import theme from "../theme";
 import Header from "../components/header";
 import Footer from "../components/footer";
@@ -37,6 +44,10 @@ const DogsPage = ({ data, location }) => {
           cursor="pointer"
           onClick={() => navigate(`/puppy/${puppy.id}`)}
         />
+        <Text>Name: {puppy.name}</Text>
+        <Text mt="-10px">
+          Breed: {puppy.breed.charAt(0).toUpperCase() + puppy.breed.slice(1)}
+        </Text>
         <Button
           bg={theme.colors.primary}
           borderRadius={15}
@@ -77,7 +88,7 @@ const DogsPage = ({ data, location }) => {
 export const query = graphql`
   query {
     allPuppy(
-      sort: { created_at: ASC }
+      sort: { created_at: DESC }
       filter: { status: { ne: "Unlisted" } }
     ) {
       nodes {

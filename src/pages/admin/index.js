@@ -30,6 +30,8 @@ import {
   TableContainer,
   Text,
   useDisclosure,
+  Select,
+  Spacer,
 } from "@chakra-ui/react";
 
 import theme from "../../theme";
@@ -42,6 +44,7 @@ import { tableRow } from "./admin.module.css";
 const AdminPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [userList, setUserList] = useState([]);
+  const [allUserList, setAllUserList] = useState([]); // for filtering
   const [successAlert, setSuccessAlert] = useState(null);
   const [errorAlert, setErrorAlert] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +61,7 @@ const AdminPage = () => {
         const { data } = await axios.get(`/api/auth0?action=get_all_users`);
 
         setUserList(data);
+        setAllUserList(data);
         setErrorAlert(null);
       } catch (error) {
         setErrorAlert(error?.response?.data || error.message);
@@ -184,6 +188,20 @@ const AdminPage = () => {
     );
   };
 
+  const filterRole = (role) => {
+    if (role === "all") {
+      setUserList(allUserList);
+    } else {
+      const filteredList = allUserList.filter((user) => {
+        const roles = !isEmpty(user.app_metadata)
+          ? user.app_metadata.roles
+          : [];
+        return roles.includes(role);
+      });
+      setUserList(filteredList);
+    }
+  };
+
   return (
     <ChakraProvider theme={theme}>
       <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />
@@ -207,54 +225,61 @@ const AdminPage = () => {
         {isLoading ? (
           <CustomSpinner />
         ) : (
-          <TableContainer bg="white" mx="15px">
-            <Table variant="simple">
-              <TableCaption>List of all users</TableCaption>
-              <Thead>
-                <Tr>
-                  <Th>Name</Th>
-                  <Th>Email</Th>
-                  <Th>Role</Th>
-                  <Th>Email Verified</Th>
-                  <Th>Breeder Verified</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody className={tableRow}>
-                {userList.map((user) => {
-                  const roles = !isEmpty(user.app_metadata)
-                    ? user.app_metadata.roles
-                    : [];
-                  return (
-                    <Tr key={user.user_id}>
-                      <Td>
-                        {!isEmpty(user.user_metadata) &&
-                        user.user_metadata.first_name
-                          ? (
-                              user.user_metadata.first_name +
-                              " " +
-                              user.user_metadata.last_name
-                            ).trim()
-                          : user.name}
-                      </Td>
-                      <Td>{user.email}</Td>
-                      <Td>{roles.length ? roles.join(", ") : "-"}</Td>
-                      <Td>
-                        {user.email_verified ? (
-                          <CheckCircleTwoTone
-                            style={{ fontSize: "20px" }}
-                            twoToneColor="#52c41a"
-                          />
-                        ) : (
-                          <CloseCircleTwoTone
-                            style={{ fontSize: "20px" }}
-                            twoToneColor="#ff4d4d"
-                          />
-                        )}
-                      </Td>
-                      <Td>
-                        {roles.includes("breeder") ? (
-                          user.user_metadata?.breeder_verified ? (
+          <Box mx="15px">
+            <Flex mb={3}>
+              <Spacer />
+              <Text fontSize={16} w="75px" lineHeight="40px">
+                Filter by
+              </Text>
+              <Select
+                placeholder="Role"
+                bg="white"
+                w="200px"
+                onChange={(e) => {
+                  filterRole(e.target.value);
+                }}
+              >
+                <option value="all">All</option>
+                <option value="admin">Admin</option>
+                <option value="breeder">Breeder</option>
+                <option value="buyer">Buyer</option>
+              </Select>
+            </Flex>
+
+            <TableContainer bg="white">
+              <Table variant="simple">
+                <TableCaption>List of all users</TableCaption>
+                <Thead>
+                  <Tr>
+                    <Th>Name</Th>
+                    <Th>Email</Th>
+                    <Th>Role</Th>
+                    <Th>Email Verified</Th>
+                    <Th>Breeder Verified</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody className={tableRow}>
+                  {userList.map((user) => {
+                    const roles = !isEmpty(user.app_metadata)
+                      ? user.app_metadata.roles
+                      : [];
+                    return (
+                      <Tr key={user.user_id}>
+                        <Td>
+                          {!isEmpty(user.user_metadata) &&
+                          user.user_metadata.first_name
+                            ? (
+                                user.user_metadata.first_name +
+                                " " +
+                                user.user_metadata.last_name
+                              ).trim()
+                            : user.name}
+                        </Td>
+                        <Td>{user.email}</Td>
+                        <Td>{roles.length ? roles.join(", ") : "-"}</Td>
+                        <Td>
+                          {user.email_verified ? (
                             <CheckCircleTwoTone
                               style={{ fontSize: "20px" }}
                               twoToneColor="#52c41a"
@@ -264,27 +289,42 @@ const AdminPage = () => {
                               style={{ fontSize: "20px" }}
                               twoToneColor="#ff4d4d"
                             />
-                          )
-                        ) : (
-                          "-"
-                        )}
-                      </Td>
-                      <Td>
-                        <Link
-                          mr={3}
-                          onClick={() => {
-                            viewProfile(user, roles);
-                          }}
-                        >
-                          view
-                        </Link>
-                      </Td>
-                    </Tr>
-                  );
-                })}
-              </Tbody>
-            </Table>
-          </TableContainer>
+                          )}
+                        </Td>
+                        <Td>
+                          {roles.includes("breeder") ? (
+                            user.user_metadata?.breeder_verified ? (
+                              <CheckCircleTwoTone
+                                style={{ fontSize: "20px" }}
+                                twoToneColor="#52c41a"
+                              />
+                            ) : (
+                              <CloseCircleTwoTone
+                                style={{ fontSize: "20px" }}
+                                twoToneColor="#ff4d4d"
+                              />
+                            )
+                          ) : (
+                            "-"
+                          )}
+                        </Td>
+                        <Td>
+                          <Link
+                            mr={3}
+                            onClick={() => {
+                              viewProfile(user, roles);
+                            }}
+                          >
+                            view
+                          </Link>
+                        </Td>
+                      </Tr>
+                    );
+                  })}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </Box>
         )}
       </Box>
 

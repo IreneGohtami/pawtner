@@ -17,6 +17,11 @@ import {
   MenuItem,
   MenuList,
   Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
   Show,
   Spacer,
   Text,
@@ -27,7 +32,7 @@ import { BellIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "@reach/router";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
-import { getCookie, deleteCookie } from "../cookie-manager";
+import { getCookie, deleteCookie, setCookie } from "../cookie-manager";
 
 import ChatPage from "../components/chat";
 import FavoriteIcon from "../images/icons/favorite.inline.svg";
@@ -43,6 +48,7 @@ const Header = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [role, setRole] = useState([]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
 
   const headerHeights = { base: "70px", md: "100px", "2xl": "122px" };
   const isProfilePage = location.pathname === "/account/breeder-profile/";
@@ -50,6 +56,12 @@ const Header = ({
   const isAccountPage = location.pathname.startsWith("/account/");
 
   useEffect(() => {
+    const firstTime = getCookie("firstTime");
+    if (!firstTime) {
+      setShowFirstTimeModal(true);
+      setCookie("firstTime", true, 30);
+    }
+
     if (user) {
       let roles = user?.["https://pawtner.gatsbyjs.io/roles"] || [];
       if (!roles.length) {
@@ -121,6 +133,29 @@ const Header = ({
           breederId={user?.sub.split("|").pop() || ""}
           breederInfo={userMetadata || {}}
         />
+      </Modal>
+
+      {/* First time visit modal */}
+      <Modal
+        isOpen={showFirstTimeModal}
+        size="md"
+        onClose={() => {
+          setShowFirstTimeModal(false);
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Welcome to Pawtner!</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={5}>
+              Pawtner is a platform that connects breeders and buyers. We are
+              here to help you find your perfect puppy! However, consider
+              adopting a pet from a shelter or rescue organization. There are
+              many loving animals in need of a home.
+            </Text>
+          </ModalBody>
+        </ModalContent>
       </Modal>
 
       <Hide below="md">

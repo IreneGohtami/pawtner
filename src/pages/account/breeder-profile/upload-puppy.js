@@ -247,13 +247,14 @@ const UploadPuppyPage = ({
       let uploadFailed = false;
       for (let i = 0; i < certificates.length; i++) {
         const certificate = certificates[i];
-        if (certificate.status === "done") {
+        if (certificate.status === "done" && certificate.url) {
           certificateList.push({
             reference: certificate.uid,
             url: certificate.url,
           });
           continue;
         }
+
         const certificateRefId = uid();
         try {
           const storageRef = ref(
@@ -283,13 +284,17 @@ const UploadPuppyPage = ({
       }
     }
 
-    deletedCertificates.forEach(async (certificate) => {
-      const storageRef = ref(
-        storage,
-        `users/${userId}/documents/certificates/${certificate}.png`
-      );
-      await deleteObject(storageRef);
-    });
+    try {
+      deletedCertificates.forEach(async (certificate) => {
+        const storageRef = ref(
+          storage,
+          `users/${userId}/documents/certificates/${certificate}.png`
+        );
+        await deleteObject(storageRef);
+      });
+    } catch (error) {
+      // ignore error
+    }
 
     setForm({ ...form, certificates: certificateList });
 
@@ -317,6 +322,7 @@ const UploadPuppyPage = ({
       if (action === "edit") {
         const puppyRef = doc(db, "puppy", puppyData.id);
         delete form.id;
+
         await updateDoc(puppyRef, { ...form, ...formExt });
       } else {
         await addDoc(collection(db, "puppy"), {
@@ -446,6 +452,9 @@ const UploadPuppyPage = ({
       if (status === "error" || status === "uploading") {
         // change to pending so it doesn't have the default error cannot post 404
         file.status = "pending";
+      } else if (status === "done") {
+        // remove error object
+        delete file.error;
       } else {
         // no status means it failed validateImage validation
         fileList[fileList.length - 1].status = "error";
@@ -741,10 +750,11 @@ const UploadPuppyPage = ({
                 </Text>
               )}
               <Upload
+                action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
                 name="certificates"
                 accept="image/*"
-                showUploadList={false}
-                multiple={true}
+                listType="picture"
+                multiple
                 maxCount={3}
                 beforeUpload={(file) => validateImage(file, "certificate")}
                 onChange={handleCertificateChange}
