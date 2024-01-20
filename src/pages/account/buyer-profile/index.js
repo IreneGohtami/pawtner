@@ -555,7 +555,7 @@ const BuyerProfile = () => {
                             </Text>
                             <Text opacity={0.7}>Buyer</Text>
 
-                            <HStack mt={2}>
+                            {/*<HStack mt={2}>
                               <Center className={followerBox}>
                                 <VStack>
                                   <Text fontSize={22} fontWeight={600}>
@@ -572,7 +572,7 @@ const BuyerProfile = () => {
                                   <Text>Followers</Text>
                                 </VStack>
                               </Center>
-                            </HStack>
+                            </HStack>*/}
 
                             <Divider my={5} />
 

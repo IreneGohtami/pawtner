@@ -177,10 +177,11 @@ const AdminPage = () => {
               }}
             />
             <Text fontWeight={600} mt={2}>
-              {puppy.name} - {puppy.breed}
+              {puppy.name} -{" "}
+              {puppy.breed.charAt(0).toUpperCase() + puppy.breed.slice(1)}
             </Text>
             <Text>
-              ${puppy.price}, {puppy.gender}, {puppy.color}
+              ${puppy.price}, {puppy.gender}, {puppy.color} - {puppy.status}
             </Text>
           </Box>
         ))}
@@ -189,7 +190,7 @@ const AdminPage = () => {
   };
 
   const filterRole = (role) => {
-    if (role === "all") {
+    if (!role) {
       setUserList(allUserList);
     } else {
       const filteredList = allUserList.filter((user) => {
@@ -232,14 +233,13 @@ const AdminPage = () => {
                 Filter by
               </Text>
               <Select
-                placeholder="Role"
+                placeholder="Role - All"
                 bg="white"
                 w="200px"
                 onChange={(e) => {
                   filterRole(e.target.value);
                 }}
               >
-                <option value="all">All</option>
                 <option value="admin">Admin</option>
                 <option value="breeder">Breeder</option>
                 <option value="buyer">Buyer</option>
@@ -358,8 +358,8 @@ const AdminPage = () => {
                       {renderUserField("country")}
                       {renderUserField("about_me")}
                       {renderUserField("breeder_verified")}
-                      {renderUserField("followers")}
-                      {renderUserField("following")}
+                      {/*renderUserField("followers")*/}
+                      {/*renderUserField("following")*/}
                     </>
                   )}
                 {isEmpty(profile.user_metadata) && "Profile is not set."}
@@ -367,7 +367,7 @@ const AdminPage = () => {
                 {roles.includes("breeder") && (
                   <>
                     <Text fontWeight={600} mt={5}>
-                      Puppy List
+                      Puppy List ({puppyList.length})
                     </Text>
                     <Divider my={2} />
                     {puppyList.length && !isLoadingViewProfile ? (

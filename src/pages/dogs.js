@@ -3,10 +3,14 @@ import React, { useEffect, useState } from "react";
 import {
   Button,
   Heading,
+  Flex,
   Image,
+  Input,
   SimpleGrid,
+  Spacer,
   Text,
   VStack,
+  Select,
 } from "@chakra-ui/react";
 import theme from "../theme";
 import Header from "../components/header";
@@ -15,19 +19,29 @@ import Seo from "../components/seo";
 
 const DogsPage = ({ data, location }) => {
   const [puppyList, setPuppyList] = useState(data.allPuppy.nodes);
-  const search = new URLSearchParams(location.search).get("search") || "";
+  const [search, setSearch] = useState(
+    new URLSearchParams(location.search).get("search") || ""
+  );
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
+    let tempAllPuppy = data.allPuppy.nodes;
     if (search) {
-      setPuppyList(
-        puppyList.filter(
-          (puppy) =>
-            puppy.name.toLowerCase().includes(search.toLowerCase()) ||
-            puppy.breed.toLowerCase().includes(search.toLowerCase())
-        )
+      tempAllPuppy = data.allPuppy.nodes.filter(
+        (puppy) =>
+          puppy.name.toLowerCase().includes(search.toLowerCase()) ||
+          puppy.breed.toLowerCase().includes(search.toLowerCase())
       );
+      setPuppyList(tempAllPuppy);
     }
-  }, [search]);
+    if (status) {
+      setPuppyList(tempAllPuppy.filter((puppy) => puppy.status === status));
+    }
+
+    if (!search && !status) {
+      setPuppyList(data.allPuppy.nodes);
+    }
+  }, [search, status]);
 
   const renderPuppy = (puppy) => {
     return (
@@ -71,6 +85,34 @@ const DogsPage = ({ data, location }) => {
         Pet Available For Adoption
       </Heading>
 
+      <Flex mb="30px">
+        <Spacer />
+        <Text fontSize="lg" fontWeight="bold" w="180px" lineHeight="40px">
+          Search for a puppy
+        </Text>
+        <Input
+          type="text"
+          w="300px"
+          mr="10px"
+          placeholder="Search by name or breed"
+          focusBorderColor={theme.colors.primary}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Select
+          w="150px"
+          mr="25px"
+          placeholder="Status - All"
+          onChange={(e) => {
+            setStatus(e.target.value);
+          }}
+        >
+          <option value="Available">Available</option>
+          <option value="Reserved">Reserved</option>
+          <option value="Adopted">Adopted</option>
+        </Select>
+      </Flex>
+
       {puppyList.length === 0 && (
         <Heading size="md" textAlign="center">
           No puppy found
@@ -98,6 +140,7 @@ export const query = graphql`
         picture {
           url
         }
+        status
       }
     }
   }

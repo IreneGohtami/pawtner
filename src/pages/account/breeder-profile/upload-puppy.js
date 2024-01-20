@@ -96,7 +96,7 @@ const UploadPuppyPage = ({
   const [uploadCertificateError, setUploadCertificateError] = useState("");
   const [deletedCertificates, setDeletedCertificates] = useState([]);
   const colors = ["Brown", "Black", "White", "Gray", "Others"];
-  const statuses = ["Available", "Adopted", "Reserved", "Unlisted"];
+  const statuses = ["Available", "Reserved", "Adopted", "Unlisted"];
   const sizes = ["Small", "Medium", "Large"];
 
   useEffect(() => {
@@ -639,9 +639,8 @@ const UploadPuppyPage = ({
                 <FormControl isInvalid={isValidating && !form.price}>
                   <NumberInput
                     name="price"
-                    min={0}
                     focusBorderColor={theme.colors.primary}
-                    value={form.price}
+                    value={form.price || ""}
                     isReadOnly={action === "view"}
                     onChange={(value) => {
                       setForm({ ...form, price: Number(value) });

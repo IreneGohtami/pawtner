@@ -275,33 +275,33 @@ const PuppyDetail = ({ data }) => {
                     ? "Puppy is not available"
                     : !stripePaymentLink
                     ? "Please login first"
-                    : "Can't apply for your own puppy"
+                    : puppy.owner_id === user?.sub
+                    ? "Can't reserve your own puppy"
+                    : "Only reserve a puppy when invited to reserve by a breeder"
                 }
-                isDisabled={
-                  !(
-                    puppy.owner_id === user?.sub ||
-                    !stripePaymentLink ||
-                    puppy.status !== "Available"
-                  )
-                }
+                placement="bottom"
               >
-                Reserve
+                Reserve *
               </Tooltip>
             </Button>
             <Button
               className={button}
-              isDisabled={!puppy.application_form}
+              isDisabled={
+                !puppy.application_form ||
+                puppy.status !== "Available" ||
+                puppy.owner_id === user?.sub
+              }
               onClick={() => window.open(puppy.application_form, "_blank")}
             >
               <Tooltip
                 label={
-                  !puppy.application_form
+                  puppy.owner_id !== user?.sub
                     ? "Fill application form so the breeder can contact you to apply"
                     : "Can't apply for your own puppy"
                 }
-                placement="right"
+                placement="bottom"
               >
-                Application form
+                Application form *
               </Tooltip>
             </Button>
           </SimpleGrid>

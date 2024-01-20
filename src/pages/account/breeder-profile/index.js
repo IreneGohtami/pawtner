@@ -25,7 +25,6 @@ import {
   ChakraProvider,
   Box,
   Button,
-  Center,
   Circle,
   Divider,
   Flex,
@@ -843,6 +842,7 @@ const BreederProfile = () => {
                           p="25px"
                           display="flex"
                           justifyContent="center"
+                          minW="350px"
                         >
                           <VStack>
                             {isUploadingPicture ? (
@@ -891,7 +891,7 @@ const BreederProfile = () => {
                                 : "Not Verified"
                             }`}</Text>
 
-                            <HStack mt={2}>
+                            {/*<HStack mt={2}>
                               <Center className={followerBox}>
                                 <VStack>
                                   <Text fontSize={22} fontWeight={600}>
@@ -908,7 +908,7 @@ const BreederProfile = () => {
                                   <Text>Followers</Text>
                                 </VStack>
                               </Center>
-                            </HStack>
+                          </HStack>*/}
 
                             <Divider my={5} />
 
