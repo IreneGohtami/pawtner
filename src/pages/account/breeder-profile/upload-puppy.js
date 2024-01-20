@@ -59,7 +59,7 @@ const UploadPuppyPage = ({
   setSuccessAlert,
   db,
   storage,
-  action,
+  action = "add",
   puppyData,
 }) => {
   const theme = useTheme();
