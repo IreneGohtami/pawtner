@@ -120,12 +120,12 @@ const BuyerProfile = () => {
     fetchUserMetadata();
   }, []);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (successAlert) {
       // Trigger a rebuild in gatsby via webhook
-      axios.post(process.env.NETLIFY_BUILD_WEBHOOK);
+      axios.post(process.env.NETLIFY_BUILD_WEBHOOK, {});
     }
-  }, [successAlert]);
+  }, [successAlert]);*/
 
   const renderSectionTitle = (title) => {
     return isLoading ? (

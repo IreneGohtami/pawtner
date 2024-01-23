@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { isEmpty } from "lodash";
 import { navigate } from "gatsby";
-import { SettingOutlined } from "@ant-design/icons";
+import { HeartFilled, SettingOutlined } from "@ant-design/icons";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   Box,
@@ -57,7 +57,7 @@ const Header = ({
 
   useEffect(() => {
     const firstTime = getCookie("firstTime");
-    if (!firstTime) {
+    if (firstTime) {
       setShowFirstTimeModal(true);
       setCookie("firstTime", true, 30);
     }
@@ -148,11 +148,32 @@ const Header = ({
           <ModalHeader>Welcome to Pawtner!</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text mb={5}>
+            <Text mb={4}>
               Pawtner is a platform that connects breeders and buyers. We are
               here to help you find your perfect puppy! However, consider
               adopting a pet from a shelter or rescue organization. There are
-              many loving animals in need of a home.
+              many loving animals in need of a home <HeartFilled />
+              <HeartFilled />
+              <HeartFilled />
+            </Text>
+            <Text mb={4}>
+              We are currently in beta/test mode and for the next 3-6 months,
+              the platform is free of any charge.
+            </Text>
+            <Text mb={5}>
+              By using{" "}
+              <Link color="teal" href="https://pawtner.ca" target="blank">
+                pawtner.ca
+              </Link>{" "}
+              you agree to accept our{" "}
+              <Link color="teal" href="/terms-and-conditions" target="blank">
+                Terms and Conditions
+              </Link>{" "}
+              and{" "}
+              <Link color="teal" href="/privacy-policy" target="blank">
+                Privacy Policy
+              </Link>
+              .
             </Text>
           </ModalBody>
         </ModalContent>

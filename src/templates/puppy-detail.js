@@ -22,6 +22,7 @@ import {
   getDoc,
   getDocs,
   query,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -37,6 +38,8 @@ import {
   labelText,
   favoriteButton,
 } from "./puppy-detail.module.css";
+
+const FREE_TIER = true;
 
 const PuppyDetail = ({ data }) => {
   const { puppy } = data;
@@ -60,7 +63,9 @@ const PuppyDetail = ({ data }) => {
   const { isAuthenticated, user } = useAuth0();
   const [isFavorite, setIsFavorite] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isReserving, setIsReserving] = useState(false);
   const [errorAlert, setErrorAlert] = useState(null);
+  const [successAlert, setSuccessAlert] = useState(null);
   const [displayChat, setDisplayChat] = useState(false);
   const [breederInfo, setBreederInfo] = useState(defaultMetadata);
   const [stripePaymentLink, setStripePaymentLink] = useState(null);
@@ -146,6 +151,8 @@ const PuppyDetail = ({ data }) => {
 
   const checkPuppyStatus = async () => {
     setErrorAlert(null);
+    setSuccessAlert(null);
+    setIsReserving(true);
     try {
       const docRef = doc(db, "puppy", puppy.id);
       const docSnapshot = await getDoc(docRef);
@@ -157,7 +164,17 @@ const PuppyDetail = ({ data }) => {
         if (status !== "Available") {
           setErrorAlert("Sorry, this puppy is no longer available.");
         } else {
-          window.open(stripePaymentLink, "_blank");
+          if (FREE_TIER) {
+            const puppyRef = doc(db, "puppy", puppy.id);
+            await updateDoc(puppyRef, {
+              status: "Reserved",
+            });
+            setSuccessAlert(
+              "Puppy reserved successfully! Please wait for the breeder to confirm your reservation."
+            );
+          } else {
+            window.open(stripePaymentLink, "_blank");
+          }
         }
       } else {
         setErrorAlert("Sorry, this puppy is no longer available.");
@@ -165,6 +182,7 @@ const PuppyDetail = ({ data }) => {
     } catch (error) {
       setErrorAlert("Sorry, there's a network error. Please reload the page.");
     }
+    setIsReserving(false);
   };
 
   return (
@@ -183,6 +201,12 @@ const PuppyDetail = ({ data }) => {
       </Modal>
 
       <Toast description={errorAlert} status="error" setAlert={setErrorAlert} />
+      <Toast
+        description={successAlert}
+        status="success"
+        setAlert={setSuccessAlert}
+      />
+
       <Header authorizedRole="all" bg="#FBFBFB" />
       <Text fontSize={45} fontWeight={600} m={5} textAlign="center">
         Puppy Details
@@ -262,6 +286,7 @@ const PuppyDetail = ({ data }) => {
             </Button>
             <Button
               className={button}
+              isLoading={isReserving}
               isDisabled={
                 puppy.owner_id === user?.sub ||
                 !stripePaymentLink ||
