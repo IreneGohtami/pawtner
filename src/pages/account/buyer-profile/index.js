@@ -16,7 +16,6 @@ import {
   ChakraProvider,
   Box,
   Button,
-  Center,
   Circle,
   Divider,
   Flex,
@@ -49,7 +48,6 @@ import TelephoneIcon from "../../../images/icons/telephone.inline.svg";
 import ListPaymentTable from "../breeder-profile/list-payment";
 import {
   cancelButton,
-  followerBox,
   imgCircle,
   profileIcon,
   textarea,
@@ -123,7 +121,7 @@ const BuyerProfile = () => {
   /*useEffect(() => {
     if (successAlert) {
       // Trigger a rebuild in gatsby via webhook
-      axios.post(process.env.NETLIFY_BUILD_WEBHOOK, {});
+      axios.post(process.env.GATSBY_NETLIFY_BUILD_WEBHOOK);
     }
   }, [successAlert]);*/
 
