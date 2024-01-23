@@ -175,10 +175,6 @@ const BreederProfile = () => {
 
   useEffect(() => {
     if (successAlert) {
-      console.log(
-        process.env.GATSBY_NETLIFY_BUILD_WEBHOOK,
-        "GATSBY_NETLIFY_BUILD_WEBHOOK"
-      );
       // Trigger a rebuild in gatsby via webhook
       axios.post(process.env.GATSBY_NETLIFY_BUILD_WEBHOOK);
     }
