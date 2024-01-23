@@ -175,10 +175,10 @@ const BreederProfile = () => {
 
   useEffect(() => {
     if (successAlert) {
+      console.log(process.env.NETLIFY_BUILD_WEBHOOK, "NETLIFY_BUILD_WEBHOOK");
       // Trigger a rebuild in gatsby via webhook
       axios.post(
-        "https://api.netlify.com/build_hooks/651fb383e5a0286be4d8386d",
-        {}
+        "https://api.netlify.com/build_hooks/651fb383e5a0286be4d8386d"
       );
     }
   }, [successAlert]);
