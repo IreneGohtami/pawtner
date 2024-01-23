@@ -57,7 +57,7 @@ const Header = ({
 
   useEffect(() => {
     const firstTime = getCookie("firstTime");
-    if (firstTime) {
+    if (!firstTime) {
       setShowFirstTimeModal(true);
       setCookie("firstTime", true, 30);
     }
