@@ -26,3 +26,17 @@
   text-align: right !important;
   margin: 10px;
 }
+
+/* Media query for screens below lg */
+@media screen and (max-width: 1023px) {
+  .label,
+  .label-text {
+    font-size: 18px;
+  }
+
+  .button {
+    font-size: smaller;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+}

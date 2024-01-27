@@ -211,7 +211,7 @@ const PuppyDetail = ({ data }) => {
       <Text fontSize={45} fontWeight={600} m={5} textAlign="center">
         Puppy Details
       </Text>
-      <Flex px="40px">
+      <Flex px="40px" direction={{ base: "column", md: "row" }}>
         <Box flex="1" display="block" pl={3} textAlign="right">
           <Image
             w="auto"
@@ -238,7 +238,7 @@ const PuppyDetail = ({ data }) => {
             />
           )}
         </Box>
-        <Box w="40%" pl="20px" pr={3}>
+        <Box pl="20px" pr={3}>
           <SimpleGrid columns={2} spacing={3} textAlign="left">
             <Text className={label}>Puppy Name</Text>
             <Text className={labelText}>{puppy.name}</Text>

@@ -15,7 +15,12 @@ const Footer = ({ currentPage }) => {
   };
 
   return (
-    <Flex bg="#FEE8A0" p="60px" fontFamily="Montserrat !important">
+    <Flex
+      bg="#FEE8A0"
+      p="60px"
+      fontFamily="Montserrat !important"
+      direction={{ base: "column", lg: "row" }}
+    >
       <VStack flex="1" alignItems="start" pr="50px">
         <Text fontSize={20} fontFamily="Sniglet !important">
           Finding the right partner has never been easier
@@ -27,7 +32,11 @@ const Footer = ({ currentPage }) => {
         </Text>
       </VStack>
 
-      <VStack w="22%" alignItems="start">
+      <VStack
+        w={{ base: "auto", lg: "20%" }}
+        alignItems="start"
+        mt={{ base: "30px", lg: 0 }}
+      >
         <Text fontSize={20} fontFamily="Sniglet !important">
           About us
         </Text>
@@ -55,7 +64,11 @@ const Footer = ({ currentPage }) => {
         </Link>
       </VStack>
 
-      <VStack w="22%" alignItems="start">
+      <VStack
+        w={{ base: "auto", lg: "16%" }}
+        alignItems="start"
+        mt={{ base: "30px", lg: 0 }}
+      >
         <Text fontSize={20} fontFamily="Sniglet !important">
           Collections
         </Text>
@@ -64,7 +77,11 @@ const Footer = ({ currentPage }) => {
         </Link>
       </VStack>
 
-      <VStack w="22%" alignItems="start">
+      <VStack
+        w={{ base: "auto", lg: "22%" }}
+        alignItems="start"
+        mt={{ base: "30px", lg: 0 }}
+      >
         <Text fontSize={20} fontFamily="Sniglet !important">
           Contact Information
         </Text>
