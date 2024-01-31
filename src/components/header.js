@@ -119,7 +119,7 @@ const Header = ({
     <Flex bg={bg || "none"} px="40px">
       <Center h={headerHeights}>
         <IconButton
-          icon={<Image src="/logo.png" width="210px" />}
+          icon={<Image src="/paws.png" width="210px" />}
           colorScheme="transparent"
           onClick={() => navigate("/")}
         />

@@ -107,7 +107,7 @@ const HomePage = ({ puppyList = [] }) => {
               maxHeight: 558,
             }}
             layout="fullWidth"
-            src={"./images/banner-1.png"}
+            src={"./images/banner2.jpg"}
             alt="hero"
           />
         </GridItem>
@@ -168,17 +168,26 @@ const HomePage = ({ puppyList = [] }) => {
                 </InputGroup>
               </HStack>
               <Text
-                pt={5}
+                mt={5}
                 fontWeight={700}
                 fontSize={38}
                 zIndex={2}
                 color="white"
+                bg="rgba(51, 51, 51, 0.5)"
+                px="15px"
+                borderRadius={10}
               >
                 Find your new best friend
               </Text>
-              <Text fontSize={16} zIndex={2} color="white">
-                Browse pets from our network of over 11,500 shelters and
-                rescues.
+              <Text
+                fontSize={16}
+                zIndex={2}
+                color="white"
+                bg="rgba(51, 51, 51, 0.5)"
+                px="12px"
+                borderRadius={5}
+              >
+                Browse pets from our network of reputable breeders
               </Text>
             </VStack>
           </Center>
