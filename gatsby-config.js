@@ -6,6 +6,10 @@ const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 module.exports = {
   siteMetadata: {
     title: "Pawtner",
+    titleTemplate: "%s | Pawtner",
+    description: "Find your perfect pawtner",
+    url: "https://pawtner.com",
+    image: "/paws.png",
   },
   plugins: [
     "@chakra-ui/gatsby-plugin",
@@ -16,6 +20,7 @@ module.exports = {
         path: `${__dirname}/src/images`,
       },
     },
+    "gatsby-plugin-react-helmet",
     "gatsby-plugin-image",
     "gatsby-plugin-sharp",
     "gatsby-transformer-sharp",
