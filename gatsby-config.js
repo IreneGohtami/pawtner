@@ -7,9 +7,10 @@ module.exports = {
   siteMetadata: {
     title: "Pawtner",
     titleTemplate: "%s | Pawtner",
-    description: "Find your perfect pawtner",
+    description:
+      "Pawtner - Find puppies for adoption in Canada, directly from reputable breeders.",
     url: "https://pawtner.com",
-    image: "/paws.png",
+    image: "/paws-seo.png",
   },
   plugins: [
     "@chakra-ui/gatsby-plugin",
@@ -57,6 +58,34 @@ module.exports = {
             name: "Montserrat",
             file: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap",
             weights: ["400", "600", "700"],
+          },
+        ],
+      },
+    },
+    {
+      resolve: `gatsby-plugin-preload-fonts`,
+      options: {
+        crossOrigin: `anonymous`,
+        fonts: [
+          {
+            family: `Plus Jakarta Sans`,
+            variants: [`400`, `500`, `600`, `700`],
+          },
+          {
+            family: `Inter`,
+            variants: [`400`, `500`, `700`],
+          },
+          {
+            family: `Poppins`,
+            variants: [`400`, `500`, `600`, `800`],
+          },
+          {
+            family: `Sniglet`,
+            variants: [`400`],
+          },
+          {
+            family: `Montserrat`,
+            variants: [`400`, `600`, `700`],
           },
         ],
       },
