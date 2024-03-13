@@ -63,34 +63,6 @@ module.exports = {
       },
     },
     {
-      resolve: `gatsby-plugin-preload-fonts`,
-      options: {
-        crossOrigin: `anonymous`,
-        fonts: [
-          {
-            family: `Plus Jakarta Sans`,
-            variants: [`400`, `500`, `600`, `700`],
-          },
-          {
-            family: `Inter`,
-            variants: [`400`, `500`, `700`],
-          },
-          {
-            family: `Poppins`,
-            variants: [`400`, `500`, `600`, `800`],
-          },
-          {
-            family: `Sniglet`,
-            variants: [`400`],
-          },
-          {
-            family: `Montserrat`,
-            variants: [`400`, `600`, `700`],
-          },
-        ],
-      },
-    },
-    {
       resolve: "gatsby-plugin-react-svg",
       options: {
         rule: {

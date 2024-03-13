@@ -35,7 +35,6 @@
     "gatsby-omni-font-loader": "^2.0.2",
     "gatsby-plugin-image": "^3.11.0",
     "gatsby-plugin-manifest": "^5.12.3",
-    "gatsby-plugin-preload-fonts": "^4.13.1",
     "gatsby-plugin-react-helmet": "^6.13.1",
     "gatsby-plugin-react-svg": "^3.3.0",
     "gatsby-plugin-sharp": "^5.12.3",

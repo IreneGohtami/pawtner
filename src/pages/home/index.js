@@ -19,6 +19,7 @@ import {
   ModalContent,
   SimpleGrid,
   Square,
+  Stack,
   Text,
   useDisclosure,
   VStack,
@@ -96,7 +97,11 @@ const HomePage = ({ puppyList = [] }) => {
           <SelectOptionPage onClose={onClose} />
         </ModalContent>
       </Modal>
-      <Grid templateAreas={`"header" "hero" "main"`}>
+      <Grid
+        templateAreas={`"header" "hero" "main"`}
+        gridTemplateRows={"100px auto 1fr"}
+        gridTemplateColumns={"100%"}
+      >
         <GridItem area="header">
           <Header authorizedRole="all" openSelectOptionModal={onOpen} />
         </GridItem>
@@ -105,6 +110,7 @@ const HomePage = ({ puppyList = [] }) => {
             style={{
               minHeight: 260,
               maxHeight: 558,
+              objectFit: "cover",
             }}
             layout="fullWidth"
             src={"./images/banner2.jpg"}
@@ -170,24 +176,23 @@ const HomePage = ({ puppyList = [] }) => {
               <Text
                 mt={5}
                 fontWeight={700}
-                fontSize={38}
+                fontSize={{ base: 20, md: 38 }}
                 zIndex={2}
                 color="white"
                 bg="rgba(51, 51, 51, 0.5)"
-                px="15px"
                 borderRadius={10}
               >
-                Find your new best friend
+                &nbsp; Find your new best friend &nbsp;
               </Text>
               <Text
                 fontSize={16}
                 zIndex={2}
                 color="white"
                 bg="rgba(51, 51, 51, 0.5)"
-                px="12px"
                 borderRadius={5}
+                textAlign="center"
               >
-                Browse pets from our network of reputable breeders
+                &nbsp; Browse pets from our network of reputable breeders &nbsp;
               </Text>
             </VStack>
           </Center>
@@ -238,7 +243,7 @@ const HomePage = ({ puppyList = [] }) => {
 
           <Box mt="40px" p="40px" pb="60px" bg="#F8FAFF">
             <Text className={title}>Planning to Adopt a Pet?</Text>
-            <HStack spacing={4} mt="20px">
+            <Stack direction={["column", "row"]} spacing={4} mt="20px">
               <Box className={infoBox}>
                 <Box h="160px">
                   <Text className={subtitle}>About Us</Text>
@@ -285,7 +290,7 @@ const HomePage = ({ puppyList = [] }) => {
                   Learn More
                 </Button>
               </Box>
-            </HStack>
+            </Stack>
           </Box>
 
           <Footer currentPage="home" />

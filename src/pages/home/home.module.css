@@ -33,3 +33,16 @@
 .learn-more-btn:hover {
   background: #fee8a0 !important;
 }
+
+/* Small screen */
+@media (max-width: 768px) {
+  .title {
+    font-size: 22px;
+  }
+  .subtitle {
+    font-size: 18px;
+  }
+  .info-box {
+    width: 100%;
+  }
+}

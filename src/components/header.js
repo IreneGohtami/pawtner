@@ -55,6 +55,12 @@ const Header = ({
   const isAdminPage = location.pathname === "/admin/";
   const isAccountPage = location.pathname.startsWith("/account/");
 
+  const redirectToSignUp = () => {
+    loginWithRedirect({
+      authorizationParams: { screen_hint: "signup" },
+    });
+  };
+
   useEffect(() => {
     const firstTime = getCookie("firstTime");
     if (!firstTime) {
@@ -116,16 +122,170 @@ const Header = ({
   };
 
   return (
-    <Flex bg={bg || "none"} px="40px">
-      <Center h={headerHeights}>
-        <IconButton
-          icon={<Image src="/paws.png" width="210px" />}
-          colorScheme="transparent"
-          onClick={() => navigate("/")}
-        />
-      </Center>
+    <>
+      <Flex
+        bg={bg || "none"}
+        px={{ base: "15px", md: "40px" }}
+        pt={{ base: "10px", md: 0 }}
+      >
+        <Center h={headerHeights}>
+          <IconButton
+            icon={<Image src="/paws.png" width="210px" />}
+            colorScheme="transparent"
+            onClick={() => navigate("/")}
+          />
+        </Center>
 
-      <Spacer />
+        <Spacer />
+
+        <Hide below="md">
+          <Wrap justify={{ base: "left", md: "right" }} h={headerHeights}>
+            <Center h={headerHeights} px="30px">
+              {isAccountPage ? (
+                <Circle
+                  bg="white"
+                  border="0 !important"
+                  w="49px"
+                  h="49px"
+                  cursor="pointer"
+                  onClick={onOpen}
+                >
+                  {!!unreadMessageCount && (
+                    <Circle
+                      bg="#FEE8A0"
+                      position="absolute"
+                      ml="30px"
+                      top="15px"
+                      px={1}
+                      w="26px"
+                      h="26px"
+                      filter="drop-shadow(0px 6px 8px rgba(135, 67, 223, 0.37))"
+                    >
+                      <Text fontSize={14} fontWeight={600}>
+                        {unreadMessageCount}
+                      </Text>
+                    </Circle>
+                  )}
+                  <BellIcon h="28px" w="28px" />
+                </Circle>
+              ) : (
+                <>
+                  <Link href="/dogs" fontWeight={600}>
+                    Puppies for Sale
+                  </Link>
+                  <Box display="flex" ml="2rem">
+                    <FavoriteIcon
+                      cursor="pointer"
+                      onClick={() => navigate("/favorites")}
+                    />
+                  </Box>
+                </>
+              )}
+            </Center>
+          </Wrap>
+          <Wrap>
+            <Center
+              h={headerHeights}
+              borderLeft={isAccountPage ? 0 : "1px"}
+              borderColor="gray.200"
+            >
+              {!isAuthenticated ? (
+                <Text fontWeight={600} mx="30px">
+                  <Link href="#" onClick={loginWithRedirect}>
+                    Login
+                  </Link>
+                  &emsp; | &emsp;
+                  <Link href="#" onClick={redirectToSignUp}>
+                    Signup
+                  </Link>
+                </Text>
+              ) : (
+                <>
+                  {role.includes("admin") && (
+                    <Text ml="30px" fontWeight={isAdminPage ? 600 : 400}>
+                      <Link href="/admin">
+                        <SettingOutlined />
+                      </Link>
+                    </Text>
+                  )}
+                  <Text mx="30px" fontWeight={isProfilePage ? 600 : 400}>
+                    <Link
+                      href={
+                        role.includes("breeder")
+                          ? "/account/breeder-profile"
+                          : "/account/buyer-profile"
+                      }
+                    >
+                      Account
+                    </Link>
+                  </Text>
+                  <Text mr="10px">
+                    <Link
+                      href="#"
+                      onClick={() => {
+                        deleteCookie(`role|${user.email}`);
+                        logout();
+                      }}
+                    >
+                      Logout
+                    </Link>
+                  </Text>
+                </>
+              )}
+            </Center>
+          </Wrap>
+        </Hide>
+        <Show below="md">
+          <Center h="70px" pt={1}>
+            <Menu>
+              <MenuButton
+                as={IconButton}
+                aria-label="Options"
+                icon={<HamburgerIcon />}
+                variant="ghost"
+              />
+              <MenuList>
+                {!isAuthenticated ? (
+                  <>
+                    <MenuItem onClick={loginWithRedirect}>Login</MenuItem>
+                    <MenuItem onClick={redirectToSignUp}>Signup</MenuItem>
+                  </>
+                ) : (
+                  <>
+                    <MenuItem onClick={() => navigate("/admin")}>
+                      Admin Panel
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        role.includes("breeder")
+                          ? navigate("/account/breeder-profile")
+                          : navigate("/account/buyer-profile");
+                      }}
+                    >
+                      Account
+                    </MenuItem>
+                    <MenuItem onClick={onOpen}>My Messages</MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        deleteCookie(`role|${user.email}`);
+                        logout();
+                      }}
+                    >
+                      Logout
+                    </MenuItem>
+                  </>
+                )}
+                <MenuItem onClick={() => navigate("/favorites")}>
+                  Favorites
+                </MenuItem>
+                <MenuItem onClick={() => navigate("/dogs")}>
+                  Puppies for Sale
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          </Center>
+        </Show>
+      </Flex>
 
       {/* Chat modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="full">
@@ -178,148 +338,7 @@ const Header = ({
           </ModalBody>
         </ModalContent>
       </Modal>
-
-      <Hide below="md">
-        <Wrap justify={{ base: "left", md: "right" }} h={headerHeights}>
-          <Center h={headerHeights} px="30px">
-            {isAccountPage ? (
-              <Circle
-                bg="white"
-                border="0 !important"
-                w="49px"
-                h="49px"
-                cursor="pointer"
-                onClick={onOpen}
-              >
-                {!!unreadMessageCount && (
-                  <Circle
-                    bg="#FEE8A0"
-                    position="absolute"
-                    ml="30px"
-                    top="15px"
-                    px={1}
-                    w="26px"
-                    h="26px"
-                    filter="drop-shadow(0px 6px 8px rgba(135, 67, 223, 0.37))"
-                  >
-                    <Text fontSize={14} fontWeight={600}>
-                      {unreadMessageCount}
-                    </Text>
-                  </Circle>
-                )}
-                <BellIcon h="28px" w="28px" />
-              </Circle>
-            ) : (
-              <>
-                <Link href="/dogs" fontWeight={600}>
-                  Puppies for Sale
-                </Link>
-                <Box display="flex" ml="2rem">
-                  <FavoriteIcon
-                    cursor="pointer"
-                    onClick={() => navigate("/favorites")}
-                  />
-                </Box>
-              </>
-            )}
-          </Center>
-        </Wrap>
-        <Wrap>
-          <Center
-            h={headerHeights}
-            borderLeft={isAccountPage ? 0 : "1px"}
-            borderColor="gray.200"
-          >
-            {!isAuthenticated ? (
-              <Text fontWeight={600} mx="30px">
-                <Link href="#" onClick={loginWithRedirect}>
-                  Log In
-                </Link>
-              </Text>
-            ) : (
-              <>
-                {role.includes("admin") && (
-                  <Text ml="30px" fontWeight={isAdminPage ? 600 : 400}>
-                    <Link href="/admin">
-                      <SettingOutlined />
-                    </Link>
-                  </Text>
-                )}
-                <Text mx="30px" fontWeight={isProfilePage ? 600 : 400}>
-                  <Link
-                    href={
-                      role.includes("breeder")
-                        ? "/account/breeder-profile"
-                        : "/account/buyer-profile"
-                    }
-                  >
-                    Account
-                  </Link>
-                </Text>
-                <Text mr="10px">
-                  <Link
-                    href="#"
-                    onClick={() => {
-                      deleteCookie(`role|${user.email}`);
-                      logout();
-                    }}
-                  >
-                    Log Out
-                  </Link>
-                </Text>
-              </>
-            )}
-          </Center>
-        </Wrap>
-      </Hide>
-      <Show below="md">
-        <Center h="70px" pt={1}>
-          <Menu>
-            <MenuButton
-              as={IconButton}
-              aria-label="Options"
-              icon={<HamburgerIcon />}
-              variant="ghost"
-            />
-            <MenuList>
-              {!isAuthenticated ? (
-                <MenuItem onClick={loginWithRedirect}>Log In</MenuItem>
-              ) : (
-                <>
-                  <MenuItem onClick={() => navigate("/admin")}>
-                    Admin Panel
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      role.includes("breeder")
-                        ? navigate("/account/breeder-profile")
-                        : navigate("/account/buyer-profile");
-                    }}
-                  >
-                    Account
-                  </MenuItem>
-                  <MenuItem onClick={onOpen}>My Messages</MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      deleteCookie(`role|${user.email}`);
-                      logout();
-                    }}
-                  >
-                    Log Out
-                  </MenuItem>
-                </>
-              )}
-              <MenuItem onClick={() => navigate("/favorites")}>
-                Favorites
-              </MenuItem>
-              <MenuItem onClick={() => navigate("/dogs")}>
-                Puppies for Sale
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </Center>
-      </Show>
-    </Flex>
+    </>
   );
 };
 
