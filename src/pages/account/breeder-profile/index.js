@@ -69,7 +69,7 @@ import UploadPuppyPage from "./upload-puppy";
 
 import {
   cancelButton,
-  followerBox,
+  //followerBox,
   imgCircle,
   profileIcon,
   textarea,

@@ -1,3 +1,4 @@
+const fs = require("fs");
 const webpack = require("webpack");
 
 exports.onCreateWebpackConfig = ({ actions }) => {
@@ -63,4 +64,88 @@ exports.createPages = async ({ actions, graphql }) => {
       },
     });
   });
+
+  // Generate XML sitemap
+  const sitemap = generateSitemap(result.data.allPuppy.nodes, breederIds);
+
+  // Save sitemap to public directory
+  fs.writeFileSync("./sitemap.xml", sitemap);
 };
+
+function generateSitemap(puppies, breederIds) {
+  // Construct XML sitemap based on dynamic URLs
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+  // Add homepage URL
+  xml += "<url>";
+  xml += "<loc>https://pawtner.ca</loc>";
+  xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+  xml += "<changefreq>weekly</changefreq>";
+  xml += "<priority>1.00</priority>";
+  xml += "</url>";
+
+  // Add dogs URL
+  xml += "<url>";
+  xml += "<loc>https://pawtner.ca/dogs</loc>";
+  xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+  xml += "<changefreq>weekly</changefreq>";
+  xml += "<priority>0.90</priority>";
+  xml += "</url>";
+
+  // Add about URL
+  xml += "<url>";
+  xml += "<loc>https://pawtner.ca/about</loc>";
+  xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+  xml += "<changefreq>monthly</changefreq>";
+  xml += "<priority>0.50</priority>";
+  xml += "</url>";
+
+  // Add faq URL
+  xml += "<url>";
+  xml += "<loc>https://pawtner.ca/faq</loc>";
+  xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+  xml += "<changefreq>monthly</changefreq>";
+  xml += "<priority>0.50</priority>";
+  xml += "</url>";
+
+  // Add privacy policy URL
+  xml += "<url>";
+  xml += "<loc>https://pawtner.ca/privacy-policy</loc>";
+  xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+  xml += "<changefreq>monthly</changefreq>";
+  xml += "<priority>0.50</priority>";
+  xml += "</url>";
+
+  // Add terms and conditions URL
+  xml += "<url>";
+  xml += "<loc>https://pawtner.ca/terms-and-conditions</loc>";
+  xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+  xml += "<changefreq>monthly</changefreq>";
+  xml += "<priority>0.50</priority>";
+  xml += "</url>";
+
+  // Add puppies URLs
+  puppies.forEach((puppy) => {
+    xml += "<url>";
+    xml += `<loc>https://pawtner.ca/puppy/${puppy.id}</loc>`;
+    xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+    xml += "<changefreq>monthly</changefreq>";
+    xml += "<priority>0.80</priority>";
+    xml += "</url>";
+  });
+
+  // Add breeders URLs
+  breederIds.forEach((id) => {
+    const userId = id.split("|").pop();
+    xml += "<url>";
+    xml += `<loc>https://pawtner.ca/breeder/${userId}</loc>`;
+    xml += "<lastmod>" + new Date().toISOString() + "</lastmod>";
+    xml += "<changefreq>monthly</changefreq>";
+    xml += "<priority>0.70</priority>";
+    xml += "</url>";
+  });
+
+  xml += "</urlset>";
+  return xml;
+}

@@ -1,0 +1,22 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /___graphql
+Disallow: /___playground
+Disallow: /___v/
+Disallow: /preview/
+Disallow: /404/
+Disallow: /404.html
+Disallow: /dev-404-page/
+Disallow: /offline-plugin-app-shell-fallback/
+Disallow: /webpack-runtime/
+Disallow: /search/
+Disallow: /tags/
+Disallow: /categories/
+Disallow: /tags/*
+Disallow: /categories/*
+Disallow: /404.html
+Allow: /sitemap.xml
+Allow: /robots.txt
+
+Sitemap: https://pawtner.ca/sitemap.xml
