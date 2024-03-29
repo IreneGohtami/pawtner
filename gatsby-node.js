@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const webpack = require("webpack");
 
 exports.onCreateWebpackConfig = ({ actions }) => {
@@ -68,8 +69,8 @@ exports.createPages = async ({ actions, graphql }) => {
   // Generate XML sitemap
   const sitemap = generateSitemap(result.data.allPuppy.nodes, breederIds);
 
-  // Save sitemap to public directory
-  fs.writeFileSync("./sitemap.xml", sitemap);
+  // Save sitemap to static directory
+  fs.writeFileSync(path.join(__dirname, "static", "sitemap.xml"), sitemap);
 };
 
 function generateSitemap(puppies, breederIds) {
